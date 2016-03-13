@@ -24,6 +24,7 @@
 #include "Statement.hpp"
 
 #include <string>
+#include <ostream>
 #include <map>
 
 class Root;
@@ -58,5 +59,8 @@ public:
 		    Instantiation        const &decl,
 		    std::map<std::string, int> &params,
 		    std::map<std::string, Bus> &connects);
+
+public:
+  void printConfig(Root const &root, std::string  path, std::ostream &out) const;
 };
 #endif

@@ -65,3 +65,19 @@ void Component::addComponent(Root &root,
   auto const  res = m_components.emplace(std::piecewise_construct, std::forward_as_tuple(label), std::forward_as_tuple(root, inst, params,connects));
   if(!res.second)  throw "Label " + label + " already defined.";
 }
+
+void Component::printConfig(Root const &root, std::string  path, std::ostream &out) const {
+  path += '/' + m_inst.label() + ':' + m_inst.decl().name();
+  out << path << std::endl;
+  for(auto const &e : m_configs) {
+    out << '\t' << e.first << " = \"";
+    Bus const &bus = e.second;
+    for(int  i = bus.width(); i-- > 0;) {
+      out << (root.resolve(bus[i])? '1' : '0');
+    }
+    out << '"' << std::endl;
+  }
+  for(auto const &e : m_components) {
+    e.second.printConfig(root, path, out);
+  }
+}

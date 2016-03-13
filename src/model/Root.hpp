@@ -64,5 +64,11 @@ public:
 public:
   Component const& top() const { return  m_top; }
   void solve();
+  bool resolve(int const  v) const {
+    for(int  i : m_clauses) {
+      if(abs(i) == v)  return  i > 0;
+    }
+    throw "Config variable not found.";
+  }
 };
 #endif
