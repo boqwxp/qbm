@@ -90,6 +90,8 @@ void Root::dumpClauses(std::ostream &out) const {
 }
 
 void Root::solve() {
+  if(m_res != QUANTOR_RESULT_UNKNOWN)  return;
+
   qbm::Quantor  q;
 
   q.scope(QUANTOR_EXISTENTIAL_VARIABLE_TYPE);
@@ -105,12 +107,16 @@ void Root::solve() {
   q.add(0);
 
   for(int lit : m_clauses) q.add(lit);
-  Result const res = q.sat();
-  std::cout << res << std::endl;
-  if(res) {
-    int const *assign = q.assignment();
-    while(*assign) {
-      std::cout << (*assign++) << ' ';
+  m_clauses.clear();
+
+  m_res = q.sat();
+  std::cout << m_res << std::endl;
+  if(m_res) {
+    int const *asgn = q.assignment();
+    while(true) {
+      int const  v = *asgn++;
+      if(v == 0)  break;
+      m_clauses.push_back(v);
     }
   }
 }

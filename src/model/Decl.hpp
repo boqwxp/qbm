@@ -20,8 +20,7 @@
 #ifndef DECL_HPP
 #define DECL_HPP
 
-#include <string>
-#include <sstream>
+#include <ostream>
 
 class Decl {
 protected:
@@ -29,11 +28,6 @@ protected:
   virtual ~Decl() {}
 
 public:
-  operator std::string() const {
-    std::stringstream  res;
-    dump(res);
-    return  res.str();
-  }
   virtual void dump(std::ostream& out) const = 0;
 };
 

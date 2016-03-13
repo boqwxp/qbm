@@ -36,6 +36,7 @@ class Result {
 
   //- Construction / Destruction
 public:
+  Result() : m_val(QUANTOR_RESULT_UNKNOWN) {}
   Result(::QuantorResult  val) : m_val(val) {
     assert((0 <= val) && (val <= 40) && ((val % 10) == 0));
   }

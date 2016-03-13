@@ -85,7 +85,7 @@ void Instantiation::execute(Component &ctx) const {
   { // Compute Generic Parameters
     unsigned const  n = m_params.size();
     if(n != m_decl.countParameters())  throw "Wrong number of parameters.";
-    for(unsigned  i = 0; i < n; i++)  params[m_decl.getParameter(i)] = ctx.computeConstant(*m_params[i]);
+    for(unsigned  i = 0; i < n; i++)  params[m_decl.getParameter(i).name()] = ctx.computeConstant(*m_params[i]);
   }
   std::map<std::string, Bus>  connects;
   { // Compute Generic Parameters

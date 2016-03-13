@@ -1,4 +1,4 @@
-CXXFLAGS := -std=gnu++11 -Wall -O3
+CXXFLAGS := -std=gnu++11 -Wall -O3 -I../../lib/quantor-3.2
 CXX	 := g++
 CC	 := g++
 
@@ -6,12 +6,10 @@ CC	 := g++
 
 all: test
 
-Result.o Root.o: CXXFLAGS += -I../../lib/quantor-3.2
-
 test: LDFLAGS += -L../../lib
 test: LDLIBS += -lquantor -lpicosat
 
 test: test.o Component.o CompDecl.o Statement.o PortDecl.o WireDecl.o Expression.o ParamDecl.o Lib.o Root.o Result.o
 
 clean:
-	rm -rf *~ *.o
+	rm -rf *~ *.o test

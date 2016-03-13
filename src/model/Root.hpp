@@ -24,6 +24,7 @@
 #include "Bus.hpp"
 #include "Statement.hpp"
 #include "Component.hpp"
+#include "Result.hpp"
 
 class Root : public Context {
 private:
@@ -39,6 +40,8 @@ private:
 
   Instantiation const  m_inst;
   Component     const  m_top;
+
+  Result  m_res;
 
 public:
   Root(CompDecl const &decl)
