@@ -33,9 +33,9 @@ private:
 
 private:
   std::vector<int>  m_clauses;
-  unsigned  m_confignxt;
-  unsigned  m_inputnxt;
-  unsigned  m_signalnxt;
+  int  m_confignxt;
+  int  m_inputnxt;
+  int  m_signalnxt;
 
   Instantiation const  m_inst;
   Component     const  m_top;
@@ -59,5 +59,6 @@ public:
 
 public:
   Component const& top() const { return  m_top; }
+  void solve();
 };
 #endif

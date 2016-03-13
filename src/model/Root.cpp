@@ -19,6 +19,8 @@
  ****************************************************************************/
 #include "Root.hpp"
 
+#include "Quantor.hpp"
+
 Bus Root::allocateConfig(unsigned  width) {
   Node *const  nodes = new Node[width];
   for(unsigned  i = 0; i < width; i++) {
@@ -85,4 +87,30 @@ void Root::dumpClauses(std::ostream &out) const {
       out << c << v << ' ';
     }
   }
+}
+
+void Root::solve() {
+  std::cerr << "A" << std::endl;
+  Quantor  q;
+
+  std::cerr << "B" << std::endl;
+  q.scope(QUANTOR_EXISTENTIAL_VARIABLE_TYPE);
+  for(int  i = FIRST_CONFIG; i < m_confignxt; i++)  q.add(i);
+  q.add(0);
+
+  std::cerr << "C" << std::endl;
+  q.scope(QUANTOR_UNIVERSAL_VARIABLE_TYPE);
+  for(int  i = FIRST_INPUT; i < m_inputnxt; i++)  q.add(i);
+  q.add(0);
+
+  std::cerr << "D" << std::endl;
+  q.scope(QUANTOR_EXISTENTIAL_VARIABLE_TYPE);
+  for(int  i = FIRST_SIGNAL; i < m_signalnxt; i++)  q.add(i);
+  q.add(0);
+
+  std::cerr << "E" << std::endl;
+  for(int lit : m_clauses) q.add(lit);
+  std::cerr << "F" << std::endl;
+  Result const res = q.sat();
+  std::cout << res << std::endl;
 }
