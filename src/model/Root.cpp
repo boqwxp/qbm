@@ -69,26 +69,20 @@ void Root::dumpClauses(std::ostream &out) const {
 	out << '~';
 	v = -v;
       }
-      if(v < FIRST_CONFIG) {
-	out << (v == Node::TOP? "TOP" : "BOT");
+      char  c = 'X'; // this should not stick!
+      if(v >= FIRST_SIGNAL) {
+	c = 'n';
+	v -= FIRST_SIGNAL;
       }
-      else {
-	char  c;
-	if(v >= FIRST_SIGNAL) {
-	  c = 'n';
-	  v -= FIRST_SIGNAL;
-	}
-	else if(v >= FIRST_INPUT) {
-	  c = 'i';
-	  v -= FIRST_INPUT;
-	}
-	else if(v >= FIRST_CONFIG) {
-	  c = 'c';
-	  v -= FIRST_CONFIG;
-	}
-	out << c << v;
+      else if(v >= FIRST_INPUT) {
+	c = 'i';
+	v -= FIRST_INPUT;
       }
-      out << ' ';
+      else if(v >= FIRST_CONFIG) {
+	c = 'c';
+	v -= FIRST_CONFIG;
+      }
+      out << c << v << ' ';
     }
   }
 }
