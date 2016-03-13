@@ -27,7 +27,7 @@
 
 class Root : public Context {
 private:
-  static int const  FIRST_CONFIG =   3;
+  static int const  FIRST_CONFIG =   2;
   static int const  FIRST_INPUT  = 100;
   static int const  FIRST_SIGNAL = 200;
 
@@ -45,12 +45,7 @@ public:
     : m_confignxt(FIRST_CONFIG),
       m_inputnxt (FIRST_INPUT),
       m_signalnxt(FIRST_SIGNAL),
-      m_inst("<top>", decl), m_top(*this, m_inst) {
-
-    // Complete the clause set by tying TOP and BOT
-    Context::addClause( Node::TOP);
-    Context::addClause(-Node::BOT);
-  }
+      m_inst("<top>", decl), m_top(*this, m_inst) {}
   ~Root() {}
 
 public:

@@ -44,15 +44,20 @@ Bus Root::allocateSignal(unsigned  width) {
 }
 
 void Root::addClause(int const *beg, int const *end) {
+  auto const  size = m_clauses.size();
   while(beg < end) {
-#ifdef DEBUG
-    std::cerr << *beg << ' ';
-#endif
-    m_clauses.push_back(*beg++);
+    int const v = *beg++;
+    switch(v) {
+    default:
+      m_clauses.push_back(v);
+    case Node::BOT:
+      continue;
+    case Node::TOP:
+      // Rollback to remove already satisfied clause
+      m_clauses.resize(size);
+      return;
+    }
   }
-#ifdef DEBUG
-  std::cerr << std::endl;
-#endif
   m_clauses.push_back(0);
 }
 

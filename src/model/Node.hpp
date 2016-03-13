@@ -22,18 +22,18 @@
 
 class Node {
 public:
-  static unsigned const  TOP = 1;
-  static unsigned const  BOT = 2;
+  static int const  TOP =  1;
+  static int const  BOT = -1;
 
 private:
   unsigned  m_val;
 
 public:
-  constexpr Node()                    : m_val(  0)     {}
-  constexpr Node(Node     const &o)   : m_val(o.m_val) {}
-  constexpr Node(unsigned const  val) : m_val(val)     {}
+  constexpr Node()                : m_val(  0)     {}
+  constexpr Node(Node const &o)   : m_val(o.m_val) {}
+  constexpr Node(int  const  val) : m_val(val)     {}
 
 public:
-  operator unsigned() const { return  m_val; }
+  operator int() const { return  m_val; }
 };
 #endif
