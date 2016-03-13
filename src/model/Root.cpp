@@ -55,3 +55,35 @@ void Root::addClause(int const *beg, int const *end) {
 #endif
   m_clauses.push_back(0);
 }
+
+void Root::dumpClauses(std::ostream &out) const {
+  for(int  v : m_clauses) {
+    if(v == 0)  out << std::endl;
+    else {
+      if(v < 0) {
+	out << '~';
+	v = -v;
+      }
+      if(v < FIRST_CONFIG) {
+	out << (v == Node::TOP? "TOP" : "BOT");
+      }
+      else {
+	char  c;
+	if(v >= FIRST_SIGNAL) {
+	  c = 'n';
+	  v -= FIRST_SIGNAL;
+	}
+	else if(v >= FIRST_INPUT) {
+	  c = 'i';
+	  v -= FIRST_INPUT;
+	}
+	else if(v >= FIRST_CONFIG) {
+	  c = 'c';
+	  v -= FIRST_CONFIG;
+	}
+	out << c << v;
+      }
+      out << ' ';
+    }
+  }
+}

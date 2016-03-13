@@ -26,10 +26,12 @@
 #include "Component.hpp"
 
 class Root : public Context {
-  static constexpr Node const  FIRST_CONFIG = (Node::TOP>Node::BOT? Node::TOP : Node::BOT)+1;
-  static constexpr Node const  FIRST_INPUT  = 100;
-  static constexpr Node const  FIRST_SIGNAL = 200;
+private:
+  static int const  FIRST_CONFIG =   3;
+  static int const  FIRST_INPUT  = 100;
+  static int const  FIRST_SIGNAL = 200;
 
+private:
   std::vector<int>  m_clauses;
   unsigned  m_confignxt;
   unsigned  m_inputnxt;
@@ -44,13 +46,10 @@ public:
       m_inputnxt (FIRST_INPUT),
       m_signalnxt(FIRST_SIGNAL),
       m_inst("<top>", decl), m_top(*this, m_inst) {
+
+    // Complete the clause set by tying TOP and BOT
     Context::addClause( Node::TOP);
     Context::addClause(-Node::BOT);
-    for(int const  i : m_clauses) {
-      std::cout << i << " ";
-      if(i == 0)  std::cout << std::endl;
-    }
-    std::cout << std::endl;
   }
   ~Root() {}
 
@@ -61,6 +60,7 @@ public:
 
 public:
   void addClause(int const *beg, int const *end) override;
+  void dumpClauses(std::ostream &out) const;
 
 public:
   Component const& top() const { return  m_top; }

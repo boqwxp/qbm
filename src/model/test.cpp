@@ -67,6 +67,7 @@ int main(int const  argc, char const *const  argv[]) {
     std::cout << top << std::endl;
 
     std::unique_ptr<Root>  root(lib.compile("top"));
+    root->dumpClauses(std::cout);
   }
   catch(char const *const  msg) {
     std::cerr << "Error:\n\t" << msg << std::endl;
