@@ -9,7 +9,7 @@ all: test
 test: LDFLAGS += -L../../lib
 test: LDLIBS += -lquantor -lpicosat
 
-test: test.o Component.o CompDecl.o Statement.o PortDecl.o WireDecl.o Expression.o ParamDecl.o Lib.o Root.o Result.o
+test: test.o Component.o CompDecl.o Statement.o PortDecl.o WireDecl.o Expression.o ParamDecl.o Lib.o Root.o Context.o Result.o
 
 clean:
 	rm -rf *~ *.o test

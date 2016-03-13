@@ -110,7 +110,6 @@ void Root::solve() {
   m_clauses.clear();
 
   m_res = q.sat();
-  std::cout << m_res << std::endl;
   if(m_res) {
     int const *asgn = q.assignment();
     while(true) {

@@ -18,13 +18,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "Statement.hpp"
+
 #include "CompDecl.hpp"
+#include "Context.hpp"
 
 ConstDecl::~ConstDecl() {}
 void ConstDecl::dump(std::ostream &out) const {
   out << "constant " << name() << " = " << expr();
 }
-void ConstDecl::execute(Component &ctx) const {
+void ConstDecl::execute(Context &ctx) const {
   ctx.defineConstant(name(), ctx.computeConstant(expr()));
 }
 
@@ -32,7 +34,7 @@ ConfigDecl::~ConfigDecl() {}
 void ConfigDecl::dump(std::ostream &out) const {
   out << "config " << name() << '[' << width() << ']';
 }
-void ConfigDecl::execute(Component &ctx) const {
+void ConfigDecl::execute(Context &ctx) const {
   ctx.registerBus(name(), ctx.allocateConfig(ctx.computeConstant(width())));
 }
 
@@ -40,7 +42,7 @@ SignalDecl::~SignalDecl() {}
 void SignalDecl::dump(std::ostream &out) const {
   out << "signal " << name() << '[' << width() << ']';
 }
-void SignalDecl::execute(Component &ctx) const {
+void SignalDecl::execute(Context &ctx) const {
   ctx.registerBus(name(), ctx.allocateSignal(ctx.computeConstant(width())));
 }
 
@@ -48,7 +50,7 @@ Equation::~Equation() {}
 void Equation::dump(std::ostream &out) const {
   out << *m_lhs << " = " << *m_rhs;
 }
-void Equation::execute(Component &ctx) const {
+void Equation::execute(Context &ctx) const {
   Bus const  lhs = ctx.computeBus(*m_lhs);
   Bus const  rhs = ctx.computeBus(*m_rhs);
   for(unsigned  i = std::max(lhs.width(), rhs.width()); i-- > 0;) {
@@ -78,7 +80,7 @@ void Instantiation::dump(std::ostream &out) const {
   }
   out << ')';
 }
-void Instantiation::execute(Component &ctx) const {
+void Instantiation::execute(Context &ctx) const {
   //    if(m_connects.size() != m_decl.countPorts())       throw "Wrong number of port connections.";
 
   std::map<std::string, int>  params;
@@ -95,5 +97,5 @@ void Instantiation::execute(Component &ctx) const {
       connects[m_decl.getPort(i).name()] = ctx.computeBus(*m_connects[i]);
     }
   }
-  ctx.addComponent(*this, params, connects);
+  ctx.addComponent(ctx.root(), *this, params, connects);
 }

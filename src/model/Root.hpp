@@ -20,13 +20,14 @@
 #ifndef ROOT_HPP
 #define ROOT_HPP
 
-#include "Node.hpp"
 #include "Bus.hpp"
-#include "Statement.hpp"
 #include "Component.hpp"
+#include "Statement.hpp"
 #include "Result.hpp"
 
-class Root : public Context {
+#include <vector>
+
+class Root {
 private:
   static int const  FIRST_CONFIG =   2;
   static int const  FIRST_INPUT  = 100;
@@ -52,12 +53,12 @@ public:
   ~Root() {}
 
 public:
-  Bus allocateConfig(unsigned  width) override;
-  Bus allocateInput (unsigned  width) override;
-  Bus allocateSignal(unsigned  width) override;
+  Bus allocateConfig(unsigned  width);
+  Bus allocateInput (unsigned  width);
+  Bus allocateSignal(unsigned  width);
 
 public:
-  void addClause(int const *beg, int const *end) override;
+  void addClause(int const *beg, int const *end);
   void dumpClauses(std::ostream &out) const;
 
 public:

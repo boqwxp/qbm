@@ -20,53 +20,38 @@
 #ifndef COMPONENT_HPP
 #define COMPONENT_HPP
 
-#include "Context.hpp"
 #include "Bus.hpp"
+#include "Statement.hpp"
 
 #include <string>
 #include <map>
 
-class Instantiation;
-class Expression;
 class Root;
+class Instantiation;
+class CompDecl;
+class Context;
 
-class Component : public Context {
-  Context             &m_parent;
+class Component {
   Instantiation const &m_inst;
   
-  std::map<std::string, int>        m_constants;
-  std::map<std::string, Bus>        m_busses;
   std::map<std::string, Component>  m_components;
   
 public:
-  Component(Root      &parent, Instantiation const &inst);
-  Component(Component &parent, Instantiation const &inst,
+  Component(Root &root, Instantiation const &inst);
+  Component(Root &root, Instantiation const &inst,
 	    std::map<std::string, int> &params,
 	    std::map<std::string, Bus> &connects);
   ~Component() {}
 
+public:
+  CompDecl const& type() const { return  m_inst.decl(); }
+
 private:
-  void compile();
+  void compile(Context &ctx);
 
 public:
-  Bus allocateConfig(unsigned  width) override;
-  Bus allocateInput (unsigned  width) override;
-  Bus allocateSignal(unsigned  width) override;
-
-public:
-  void addClause(int const *beg, int const *end) override;
-  using Context::addClause;
-public:
-  void defineConstant(std::string const &name, int val);
-  int resolveConstant(std::string const &name) const;
-  int computeConstant(Expression  const &name) const;
-
-  void registerBus(std::string const &name, Bus const &bus);
-  Bus resolveBus(std::string const &name) const;
-  Bus computeBus(Expression  const &name);
-
-public:
-  void addComponent(Instantiation        const &decl,
+  void addComponent(Root &root,
+		    Instantiation        const &decl,
 		    std::map<std::string, int> &params,
 		    std::map<std::string, Bus> &connects);
 };

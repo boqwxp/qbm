@@ -21,11 +21,12 @@
 #define STATEMENT_HPP
 
 #include "Decl.hpp"
-#include "Expression.hpp"
-#include "Component.hpp"
 
 #include <vector>
 #include <memory>
+
+class Context;
+class Expression;
 
 //- Abstract Base ------------------------------------------------------------
 class Statement : public Decl {
@@ -35,7 +36,7 @@ public:
   virtual ~Statement() {}
 
 public:
-  virtual void execute(Component &ctx) const = 0;
+  virtual void execute(Context &ctx) const = 0;
 };
 
 //- Declarations  ------------------------------------------------------------
@@ -64,7 +65,7 @@ public:
 public:
   Expression  const& value() const { return  expr(); }
   void dump(std::ostream &out) const;
-  void execute(Component &ctx) const;
+  void execute(Context &ctx) const;
 };
 
 class ConfigDecl : public Declaration {
@@ -76,7 +77,7 @@ public:
 public:
   Expression  const& width() const { return  expr(); }
   void dump(std::ostream &out) const;
-  void execute(Component &ctx) const;
+  void execute(Context &ctx) const;
 };
 
 class SignalDecl : public Declaration {
@@ -88,7 +89,7 @@ public:
 public:
   Expression  const& width() const { return  expr(); }
   void dump(std::ostream &out) const;
-  void execute(Component &ctx) const;
+  void execute(Context &ctx) const;
 };
 
 //- Behavioral Equations -----------------------------------------------------
@@ -104,7 +105,7 @@ public:
 
 public:
   void dump(std::ostream &out) const;
-  void execute(Component &ctx) const;
+  void execute(Context &ctx) const;
 };
 
 //- Structural Instantiation -------------------------------------------------
@@ -151,6 +152,6 @@ public:
 
   //- Execution --------------------------------------------------------------
 public:
-  void execute(Component &ctx) const;
+  void execute(Context &ctx) const;
 };
 #endif
