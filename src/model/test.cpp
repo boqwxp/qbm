@@ -18,6 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "Lib.hpp"
+#include "Root.hpp"
 #include "CompDecl.hpp"
 
 #include "Statement.hpp"
@@ -65,7 +66,7 @@ int main(int const  argc, char const *const  argv[]) {
     std::cout << lut << std::endl;
     std::cout << top << std::endl;
 
-    lib.compile("top");
+    std::unique_ptr<Root>  root(lib.compile("top"));
   }
   catch(char const *const  msg) {
     std::cerr << "Error:\n\t" << msg << std::endl;

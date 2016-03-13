@@ -20,8 +20,6 @@
 #ifndef LIB_HPP
 #define LIB_HPP
 
-#include "Root.hpp"
-
 #include <string>
 #include <map>
 #include <memory>
@@ -32,7 +30,6 @@ class Root;
 
 class Lib {
   std::map<std::string, CompDecl>  m_components;
-  std::unique_ptr<Root const>      m_root;
 
 public:
   Lib() {}
@@ -40,6 +37,6 @@ public:
 
 public:
   CompDecl& declareComponent(std::string const &name);
-  Component const& compile(std::string const &top);
+  Root* compile(std::string const &top);
 };
 #endif
