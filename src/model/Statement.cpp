@@ -35,7 +35,7 @@ void ConfigDecl::dump(std::ostream &out) const {
   out << "config " << name() << '[' << width() << ']';
 }
 void ConfigDecl::execute(Context &ctx) const {
-  ctx.registerBus(name(), ctx.allocateConfig(ctx.computeConstant(width())));
+  ctx.registerConfig(name(), ctx.allocateConfig(ctx.computeConstant(width())));
 }
 
 SignalDecl::~SignalDecl() {}
@@ -43,7 +43,7 @@ void SignalDecl::dump(std::ostream &out) const {
   out << "signal " << name() << '[' << width() << ']';
 }
 void SignalDecl::execute(Context &ctx) const {
-  ctx.registerBus(name(), ctx.allocateSignal(ctx.computeConstant(width())));
+  ctx.registerSignal(name(), ctx.allocateSignal(ctx.computeConstant(width())));
 }
 
 Equation::~Equation() {}

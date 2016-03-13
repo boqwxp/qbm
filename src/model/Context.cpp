@@ -70,7 +70,11 @@ int Context::computeConstant(Expression const &expr) const {
   return  comp.m_val;
 }
 
-void Context::registerBus(std::string const &name, Bus const &bus) {
+void Context::registerConfig(std::string const &name, Bus const &bus) {
+  registerSignal(name, bus);
+  m_comp.addConfig(name, bus);
+}
+void Context::registerSignal(std::string const &name, Bus const &bus) {
   if(!m_busses.emplace(name, bus).second) {
     throw "Bus " + name + " already defined.";
   }

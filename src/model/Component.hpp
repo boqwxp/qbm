@@ -33,7 +33,8 @@ class Context;
 
 class Component {
   Instantiation const &m_inst;
-  
+
+  std::map<std::string, Bus>        m_configs;
   std::map<std::string, Component>  m_components;
   
 public:
@@ -50,6 +51,9 @@ private:
   void compile(Context &ctx);
 
 public:
+  void addConfig(std::string const &name, Bus const &bus) {
+    m_configs.emplace(name, bus);
+  }
   void addComponent(Root &root,
 		    Instantiation        const &decl,
 		    std::map<std::string, int> &params,

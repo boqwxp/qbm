@@ -81,7 +81,8 @@ public:
   int resolveConstant(std::string const &name) const;
   int computeConstant(Expression  const &name) const;
 
-  void registerBus(std::string const &name, Bus const &bus);
+  void registerConfig(std::string const &name, Bus const &bus);
+  void registerSignal(std::string const &name, Bus const &bus);
   Bus resolveBus(std::string const &name) const;
   Bus computeBus(Expression  const &name);
 };

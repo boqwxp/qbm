@@ -33,7 +33,7 @@ Component::Component(Root &root, Instantiation const &inst)
   // define busses for all ports
   inst.decl().forAllPorts([&root,&ctx](PortDecl const &decl) {
       int const  width = ctx.computeConstant(decl.width());
-      ctx.registerBus(decl.name(), decl.direction() == PortDecl::Direction::in? root.allocateInput(width) : root.allocateSignal(width));
+      ctx.registerSignal(decl.name(), decl.direction() == PortDecl::Direction::in? root.allocateInput(width) : root.allocateSignal(width));
     });
 
   // execute statements
