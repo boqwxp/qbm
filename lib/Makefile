@@ -7,7 +7,7 @@ all: libpicosat.a libquantor.a
 
 # PicoSat
 libpicosat.a: $(PICOSAT)/libpicosat.a
-	ln -s $< .
+	ln -sf $< .
 
 %/libpicosat.a: %.tar.gz
 	tar xzf $< && cd $* && ./configure.sh && make
@@ -17,10 +17,10 @@ picosat-%.tar.gz:
 
 # Quantor
 libquantor.a: $(QUANTOR)/libquantor.a
-	ln -s $< .
+	ln -sf $< .
 
 %/libquantor.a: %.tar.gz $(PICOSAT)/libpicosat.a
-	tar xzf $< && cd $* && ./configure && make
+	tar xzf $< && cd $* && ./configure --picosat=../$(PICOSAT) && make
 
 quantor-%.tar.gz:
 	wget http://fmv.jku.at/quantor/$@
