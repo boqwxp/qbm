@@ -182,11 +182,11 @@ Bus Component::computeBus(Expression const &expr) {
 	unsigned const  range = lhs.width();
 
 	unsigned  width = 0;
-	for(unsigned  r = range; r != 0; r >>= 1)  width++;
+	for(unsigned  r = range-1; r != 0; r >>= 1)  width++;
 	std::unique_ptr<int[]>  clause(new int[width + 2]);
 	for(unsigned  line = 0; line < range; line++) {
 	  for(unsigned  i = 0; i < width; i++) {
-	    clause[i] = (line & (1<<i)) == 0? -rhs[i] : (unsigned)rhs[i];
+	    clause[i] = (line & (1<<i)) != 0? -rhs[i] : (unsigned)rhs[i];
 	  }
 	  clause[width]   =  lhs[line];
 	  clause[width+1] = -y;
@@ -197,7 +197,7 @@ Bus Component::computeBus(Expression const &expr) {
 	}
 	for(unsigned  line = range; line < (1u << width); line++) {
 	  for(unsigned  i = 0; i < width; i++) {
-	    clause[i] = (line & (1<<i)) == 0? (unsigned)rhs[i] : -rhs[i];
+	    clause[i] = (line & (1<<i)) != 0? (unsigned)rhs[i] : -rhs[i];
 	  }
 	  m_ctx.addClause(clause.get(), clause.get()+width);
 	}

@@ -44,6 +44,14 @@ Bus Root::allocateSignal(unsigned  width) {
 }
 
 void Root::addClause(int const *beg, int const *end) {
-  while(beg < end)   m_clauses.push_back(*beg++);
+  while(beg < end) {
+#ifdef DEBUG
+    std::cerr << *beg << ' ';
+#endif
+    m_clauses.push_back(*beg++);
+  }
+#ifdef DEBUG
+  std::cerr << std::endl;
+#endif
   m_clauses.push_back(0);
 }

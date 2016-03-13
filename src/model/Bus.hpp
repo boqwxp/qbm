@@ -36,7 +36,10 @@ public:
     m_width = width;
     if(width > 0) {
       Node *const  bus = new Node[width];
-      for(unsigned  i = 0; i < width; bus[i++] = val&1? Node::TOP : Node::BOT)  val >>= 1;
+      for(unsigned  i = 0; i < width; i++) {
+	bus[i] = val&1? Node::TOP : Node::BOT;
+	val >>= 1;
+      }
       m_nodes.reset(bus);
     }
   }

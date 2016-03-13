@@ -31,18 +31,37 @@ int main(int const  argc, char const *const  argv[]) {
     lut.addPort(PortDecl::Direction::out, "y", std::make_shared<ConstExpression>(1));
     lut.addStatement(std::make_shared<ConstDecl>("N", std::make_shared<BiExpression>(BiExpression::Op::POW, std::make_shared<ConstExpression>(2), std::make_shared<NameExpression>("K"))));
     lut.addStatement(std::make_shared<ConfigDecl>("c", std::make_shared<NameExpression>("N")));
-    lut.addStatement(std::make_shared<Equation>(std::make_shared<NameExpression>("y"), std::make_shared<NameExpression>("K")));
+    lut.addStatement(std::make_shared<Equation>(std::make_shared<NameExpression>("y"),
+						std::make_shared<BiExpression>(BiExpression::Op::SEL,
+									       std::make_shared<NameExpression>("c"),
+									       std::make_shared<NameExpression>("x")
+									       )
+						)
+		     );
 
     CompDecl &top = lib.declareComponent("top");
-    top.addPort(PortDecl::Direction::in,  "x", std::make_shared<ConstExpression>(4));
+    top.addPort(PortDecl::Direction::in,  "x", std::make_shared<ConstExpression>(2));
     top.addStatement(std::make_shared<SignalDecl>("y", std::make_shared<ConstExpression>(1)));
 
     std::shared_ptr<Instantiation>  inst(std::make_shared<Instantiation>("label", lut));
-    inst->addParameter(std::make_shared<ConstExpression>(4));
+    inst->addParameter(std::make_shared<ConstExpression>(2));
     inst->addConnection(std::make_shared<NameExpression>("x"));
     inst->addConnection(std::make_shared<NameExpression>("y"));
     top.addStatement(inst);
-  
+
+    top.addStatement(std::make_shared<Equation>(std::make_shared<NameExpression>("y"),
+						std::make_shared<BiExpression>(BiExpression::Op::AND,
+									       std::make_shared<BiExpression>(BiExpression::Op::SEL,
+													      std::make_shared<NameExpression>("x"),
+													      std::make_shared<ConstExpression>(1)
+													      ),
+									       std::make_shared<BiExpression>(BiExpression::Op::SEL,
+													      std::make_shared<NameExpression>("x"),
+													      std::make_shared<ConstExpression>(0)
+													      )
+									       )
+						)
+		     );
     std::cout << lut << std::endl;
     std::cout << top << std::endl;
 

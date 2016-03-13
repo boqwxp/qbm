@@ -26,9 +26,9 @@
 #include "Component.hpp"
 
 class Root : public Context {
-  static constexpr Node const  FIRST_CONFIG = Node::TOP>Node::BOT? Node::TOP : Node::BOT;
-  static constexpr Node const  FIRST_INPUT  = 0x3F000000;
-  static constexpr Node const  FIRST_SIGNAL = 0x40000000;
+  static constexpr Node const  FIRST_CONFIG = (Node::TOP>Node::BOT? Node::TOP : Node::BOT)+1;
+  static constexpr Node const  FIRST_INPUT  = 100;
+  static constexpr Node const  FIRST_SIGNAL = 200;
 
   std::vector<int>  m_clauses;
   unsigned  m_confignxt;
@@ -44,7 +44,12 @@ public:
       m_inputnxt (FIRST_INPUT),
       m_signalnxt(FIRST_SIGNAL),
       m_inst("<top>", decl), m_top(*this, m_inst) {
-    for(int const  i : m_clauses)  std::cout << i << " ";
+    Context::addClause( Node::TOP);
+    Context::addClause(-Node::BOT);
+    for(int const  i : m_clauses) {
+      std::cout << i << " ";
+      if(i == 0)  std::cout << std::endl;
+    }
     std::cout << std::endl;
   }
   ~Root() {}
