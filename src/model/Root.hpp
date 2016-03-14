@@ -21,6 +21,7 @@
 #define ROOT_HPP
 
 #include "Bus.hpp"
+#include "CompDecl.hpp"
 #include "Component.hpp"
 #include "Statement.hpp"
 #include "Result.hpp"
@@ -70,5 +71,6 @@ public:
     }
     throw "Config variable not found.";
   }
+  void printConfig(std::ostream &out) const;
 };
 #endif

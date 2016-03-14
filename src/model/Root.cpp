@@ -119,3 +119,27 @@ void Root::solve() {
     }
   }
 }
+
+void Root::printConfig(std::ostream &out) const {
+  class Printer : public Component::Visitor {
+    std::ostream &m_out;
+    std::string   m_path;
+
+  public:
+    Printer(std::ostream &out) : m_out(out) {}
+    ~Printer() {}
+
+  public:
+    void visitConfig(std::string const &name, std::string const &bits) {
+      m_out << '\t' << name << " = \"" << bits << "\";" << std::endl;
+    }
+    void visitChild(Component const &child) {
+      std::string const  prev = m_path;
+      m_path += '/' + child.label() + ':' + child.type().name();
+      m_out << m_path << std::endl;
+      child.accept(*this);
+      m_path = prev;
+    }
+  } prn(out);
+  top().accept(prn);
+}

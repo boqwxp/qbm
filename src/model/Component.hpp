@@ -33,6 +33,7 @@ class CompDecl;
 class Context;
 
 class Component {
+  Root                &m_root;
   Instantiation const &m_inst;
 
   std::map<std::string, Bus>        m_configs;
@@ -46,7 +47,8 @@ public:
   ~Component() {}
 
 public:
-  CompDecl const& type() const { return  m_inst.decl(); }
+  std::string const& label() const { return  m_inst.label(); }
+  CompDecl    const& type()  const { return  m_inst.decl(); }
 
 private:
   void compile(Context &ctx);
@@ -55,12 +57,19 @@ public:
   void addConfig(std::string const &name, Bus const &bus) {
     m_configs.emplace(name, bus);
   }
-  void addComponent(Root &root,
-		    Instantiation        const &decl,
+  void addComponent(Instantiation        const &decl,
 		    std::map<std::string, int> &params,
 		    std::map<std::string, Bus> &connects);
 
 public:
-  void printConfig(Root const &root, std::string  path, std::ostream &out) const;
+  class Visitor {
+  protected:
+    Visitor() {}
+    ~Visitor() {}
+  public:
+    virtual void visitConfig(std::string const &name, std::string const &bits) = 0;
+    virtual void visitChild(Component const &child) = 0;
+  };
+  void accept(Visitor &v) const;
 };
 #endif

@@ -97,5 +97,5 @@ void Instantiation::execute(Context &ctx) const {
       connects[m_decl.getPort(i).name()] = ctx.computeBus(*m_connects[i]);
     }
   }
-  ctx.addComponent(ctx.root(), *this, params, connects);
+  ctx.addComponent(*this, params, connects);
 }

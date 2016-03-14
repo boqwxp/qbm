@@ -51,7 +51,7 @@ int main(int const  argc, char const *const  argv[]) {
     top.addStatement(inst);
 
     top.addStatement(std::make_shared<Equation>(std::make_shared<NameExpression>("y"),
-						std::make_shared<BiExpression>(BiExpression::Op::AND,
+						std::make_shared<BiExpression>(BiExpression::Op::XOR,
 									       std::make_shared<BiExpression>(BiExpression::Op::SEL,
 													      std::make_shared<NameExpression>("x"),
 													      std::make_shared<ConstExpression>(1)
@@ -69,7 +69,7 @@ int main(int const  argc, char const *const  argv[]) {
     std::unique_ptr<Root>  root(lib.compile("top"));
     root->dumpClauses(std::cout);
     root->solve();
-    root->top().printConfig(*root, "", std::cout);
+    root->printConfig(std::cout);
   }
   catch(char const *const  msg) {
     std::cerr << "Error:\n\t" << msg << std::endl;

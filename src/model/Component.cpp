@@ -23,10 +23,11 @@
 #include "CompDecl.hpp"
 #include "Statement.hpp"
 
+#include <sstream>
 #include <functional>
 
 Component::Component(Root &root, Instantiation const &inst)
-  : m_inst(inst) {
+  : m_root(root), m_inst(inst) {
 
   Context  ctx(root, *this);
 
@@ -42,7 +43,7 @@ Component::Component(Root &root, Instantiation const &inst)
 Component::Component(Root &root, Instantiation const &inst,
 		     std::map<std::string, int> &params,
 		     std::map<std::string, Bus> &connects)
-  : m_inst(inst) {
+  : m_root(root), m_inst(inst) {
 
   Context  ctx(root, *this, params, connects);
   compile(ctx);
@@ -57,27 +58,28 @@ void Component::compile(Context &ctx) {
   std::cerr << "Compiling " << m_inst.label() << " done." << std::endl;
 }
 
-void Component::addComponent(Root &root,
-			     Instantiation        const &inst,
+void Component::addComponent(Instantiation        const &inst,
 			     std::map<std::string, int> &params,
 			     std::map<std::string, Bus> &connects) {
   std::string const &label = inst.label();
-  auto const  res = m_components.emplace(std::piecewise_construct, std::forward_as_tuple(label), std::forward_as_tuple(root, inst, params,connects));
+  auto const  res = m_components.emplace(std::piecewise_construct,
+					 std::forward_as_tuple(label),
+					 std::forward_as_tuple(m_root, inst, params,connects));
   if(!res.second)  throw "Label " + label + " already defined.";
 }
 
-void Component::printConfig(Root const &root, std::string  path, std::ostream &out) const {
-  path += '/' + m_inst.label() + ':' + m_inst.decl().name();
-  out << path << std::endl;
+void Component::accept(Visitor &v) const {
+  std::stringstream  bits;
   for(auto const &e : m_configs) {
-    out << '\t' << e.first << " = \"";
     Bus const &bus = e.second;
     for(int  i = bus.width(); i-- > 0;) {
-      out << (root.resolve(bus[i])? '1' : '0');
+      bits << (m_root.resolve(bus[i])? '1' : '0');
     }
-    out << '"' << std::endl;
+    v.visitConfig(e.first, bits.str());
+    bits.clear();
   }
+
   for(auto const &e : m_components) {
-    e.second.printConfig(root, path, out);
+    v.visitChild(e.second);
   }
 }

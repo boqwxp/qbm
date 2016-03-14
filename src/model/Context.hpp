@@ -69,11 +69,10 @@ public:
   }
 
 public:
-  void addComponent(Root &root,
-		    Instantiation        const &decl,
+  void addComponent(Instantiation        const &decl,
 		    std::map<std::string, int> &params,
 		    std::map<std::string, Bus> &connects) {
-    m_comp.addComponent(root, decl, params, connects);
+    m_comp.addComponent(decl, params, connects);
   }
 
 public:
