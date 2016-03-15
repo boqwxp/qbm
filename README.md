@@ -43,6 +43,7 @@ end;
 > cd ../src/model
 > make
 > cd ../qdl
+> make
 > ./test < test.qdl
 Compiling <top> ...
 Compiling lut_s0 ...
@@ -58,4 +59,5 @@ SAT
 /lut_s2:LUT
         c = "1110110010000000";
 ```
-In essence, this example computes the truth table for an adder of two 2-bit operands.
+In essence, the provided example computes the truth tables for the individual
+output bits of an adder for two 2-bit operands.
