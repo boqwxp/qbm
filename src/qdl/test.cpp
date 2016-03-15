@@ -10,6 +10,8 @@ int main() {
     QdlParser(std::cin, lib);
     std::unique_ptr<Root>  root(lib.compile("top"));
     //root->dumpClauses(std::cout);
+    std::cerr << std::endl << "Solving ... ";
+
     Result const  res = root->solve();
     std::cout << res << std::endl;
     if(res)  root->printConfig(std::cout);
