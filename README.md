@@ -59,5 +59,7 @@ SAT
 /lut_s2:LUT
         c = "1110110010000000";
 ```
-In essence, the provided example computes the truth tables for the individual
+In essence, the
+[provided example](https://github.com/preusser/qbm/blob/master/src/qdl/test.qdl)
+computes the truth tables for the individual
 output bits of an adder for two 2-bit operands.
