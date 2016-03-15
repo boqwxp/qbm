@@ -58,8 +58,8 @@ static unsigned short const  yylhs   [];
 static char const    *const  yyrules [];
 
 private:
-static unsigned short const  yygoto  [][17];
-static signed   short const  yyaction[][30];
+static unsigned short const  yygoto  [][18];
+static signed   short const  yyaction[][31];
 };
 
 #endif

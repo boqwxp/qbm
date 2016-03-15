@@ -59,6 +59,7 @@ public:
   Bus allocateSignal(unsigned  width);
 
 public:
+  void print(std::ostream &out, Bus const &bus) const;
   void addClause(int const *beg, int const *end);
   void dumpClauses(std::ostream &out) const;
 

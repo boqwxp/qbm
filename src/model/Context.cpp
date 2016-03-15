@@ -33,13 +33,13 @@ namespace {
     ~Computer() {}
 
   public:
-    void visit(ConstExpression const &expr) {
+    void visit(ConstExpression const &expr) override {
       m_val = expr.value();
     }
-    void visit(NameExpression const &expr) {
+    void visit(NameExpression const &expr) override {
       m_val = m_ctx.resolveConstant(expr.name());
     }
-    void visit(UniExpression const &expr) {
+    void visit(UniExpression const &expr) override {
       expr.arg().accept(*this);
       switch(expr.op()) {
       case UniExpression::Op::NOT: m_val = ~m_val; break;
@@ -53,7 +53,7 @@ namespace {
       default: throw "Unsupported Operation.";
       }
     }
-    void visit(BiExpression const &expr) {
+    void visit(BiExpression const &expr) override {
       expr.lhs().accept(*this);
       int const  lhs = m_val;
       expr.rhs().accept(*this);
@@ -68,12 +68,12 @@ namespace {
       default: throw "Unsupported Operation.";
       }
     }
-    void visit(CondExpression const &expr) {
+    void visit(CondExpression const &expr) override {
       expr.cond().accept(*this);
       if(m_val)  expr.pos().accept(*this);
       else 	 expr.neg().accept(*this);
     }
-    void visit(RangeExpression const &expr) {
+    void visit(RangeExpression const &expr) override {
       expr.base().accept(*this);
       unsigned const  base = m_val;
       expr.left().accept(*this);
@@ -154,7 +154,7 @@ namespace {
 
 	// Select appropriate wire from lhs
 	for(unsigned  line = 0; line < range; line++) {
-	  for(unsigned  i = 0; i < width; i++) {
+	  for(unsigned  i = width; i-- > 0;) {
 	    clause[i] = (line & (1<<i)) != 0? -rhs[i] : (unsigned)rhs[i];
 	  }
 	  clause[width]   =  lhs[line];
@@ -179,6 +179,10 @@ namespace {
 	}
 	return;
       }
+      case BiExpression::Op::CAT:
+	m_val = (lhs, rhs);
+	return;
+
       default:
 	throw "Unsupported Operation";
       }
@@ -208,12 +212,12 @@ namespace {
     void visit(RangeExpression const &expr) override {
       Computer  comp(m_ctx);
       expr.left().accept(comp);
-      unsigned const  left = comp.m_val;
+      unsigned const  hi = comp.m_val;
       expr.right().accept(comp);
-      unsigned const  right = comp.m_val;
+      unsigned const  lo = comp.m_val;
 
       expr.base().accept(*this);
-      m_val = m_val(left, right);
+      m_val = m_val(lo, hi);
     }
   }; // class Builder
 }

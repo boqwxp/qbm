@@ -33,8 +33,8 @@ std::array<char const *const, 4>  UniExpression::OPS = {
 
 BiExpression::~BiExpression() {}
 void BiExpression::accept(Visitor &vis) const { vis.visit(*this); }
-std::array<char const *const, 11>  BiExpression::OPS = {
-  "&", "|", "^", "+", "-", "*", "/", "%", "**", "@", "??"
+std::array<char const *const, 12>  BiExpression::OPS = {
+  "&", "|", "^", "+", "-", "*", "/", "%", "**", "@", "#", "??"
 };
 
 CondExpression::~CondExpression() {}

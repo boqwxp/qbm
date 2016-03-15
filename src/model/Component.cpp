@@ -52,10 +52,8 @@ Component::Component(Root &root, Instantiation const &inst,
 void Component::compile(Context &ctx) {
   std::cerr << "Compiling " << m_inst.label() << " ..." << std::endl;
   m_inst.decl().forAllStatements([&ctx](Statement const& stmt) {
-      std::cerr << stmt << std::endl;
       stmt.execute(ctx);
     });
-  std::cerr << "Compiling " << m_inst.label() << " done." << std::endl;
 }
 
 void Component::addComponent(Instantiation        const &inst,

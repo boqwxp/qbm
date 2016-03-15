@@ -80,6 +80,12 @@ namespace {
     return  out << c << v;
   }
 }
+
+void Root::print(std::ostream &out, Bus const &bus) const {
+  for(unsigned  i = bus.width(); i-- > 0;)  out << Lit(bus[i]) << ' ';
+  out << std::endl;
+}
+
 void Root::addClause(int const *beg, int const *end) {
   auto const  size = m_clauses.size();
   while(beg < end) {

@@ -17,11 +17,9 @@ component ADD<N>(a[N], b[N], cin -> s[N+1])
   s      = c ^ p;
 end;
 
-component top(a[1], b[1] -> s[2])
-  signal x[2];
-  x[1] = a;
-  x[0] = b;
-  lut_s0 : LUT<2>(x -> s[0]);
-  lut_s1 : LUT<2>(x -> s[1]);
-  fct : ADD<1>(a, b, 0 -> s);
+component top(a[2], b[2] -> s[3])
+  lut_s0 : LUT<4>(a#b -> s[0]);
+  lut_s1 : LUT<4>(a#b -> s[1]);
+  lut_s2 : LUT<4>(a#b -> s[2]);
+  fct : ADD<2>(a, b, 0 -> s);
 end;

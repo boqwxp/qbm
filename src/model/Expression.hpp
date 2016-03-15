@@ -106,8 +106,8 @@ public:
 
 class BiExpression : public Expression {
 public:
-  enum class Op { AND, OR, XOR, ADD, SUB, MUL, DIV, MOD, POW, SEL };
-  static std::array<char const *const, 11>  OPS;
+  enum class Op { AND, OR, XOR, ADD, SUB, MUL, DIV, MOD, POW, SEL, CAT };
+  static std::array<char const *const, 12>  OPS;
 
 private:
   Op const  m_op;

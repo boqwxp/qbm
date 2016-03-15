@@ -210,6 +210,7 @@ public:
       case '%':
       case ':':
       case '?':
+      case '#':
 	return  c;
       }
 
@@ -376,16 +377,23 @@ ex_atom	: NUMBER {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::POW, $1.expr(), $3.expr());
           }
 
-ex_mult	: ex_atom {
+ex_cat  : ex_atom {
 	    $$ = $1;
 	  }
-	| ex_mult '*' ex_atom {
+        | ex_cat '#' ex_atom {
+	    $$ = std::make_shared<BiExpression>(BiExpression::Op::CAT, $1.expr(), $3.expr());
+          }
+
+ex_mult	: ex_cat {
+	    $$ = $1;
+	  }
+	| ex_mult '*' ex_cat {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::MUL, $1.expr(), $3.expr());
           }
-	| ex_mult '/' ex_atom {
+	| ex_mult '/' ex_cat {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::DIV, $1.expr(), $3.expr());
           }
-	| ex_mult '%' ex_atom {
+	| ex_mult '%' ex_cat {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::MOD, $1.expr(), $3.expr());
           }
 

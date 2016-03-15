@@ -81,8 +81,6 @@ void Instantiation::dump(std::ostream &out) const {
   out << ')';
 }
 void Instantiation::execute(Context &ctx) const {
-  //    if(m_connects.size() != m_decl.countPorts())       throw "Wrong number of port connections.";
-
   std::map<std::string, int>  params;
   { // Compute Generic Parameters
     unsigned const  n = m_params.size();
@@ -92,7 +90,7 @@ void Instantiation::execute(Context &ctx) const {
   std::map<std::string, Bus>  connects;
   { // Compute Generic Parameters
     unsigned const  n = m_connects.size();
-    if(n != m_decl.countPorts())  throw "Wrong number of parameters.";
+    if(n != m_decl.countPorts())  throw "Wrong number of ports.";
     for(unsigned  i = 0; i < n; i++) {
       connects[m_decl.getPort(i).name()] = ctx.computeBus(*m_connects[i]);
     }
