@@ -30,9 +30,9 @@
 
 class Root {
 public:
-  static int const  FIRST_CONFIG =   2;
-  static int const  FIRST_INPUT  = 100;
-  static int const  FIRST_SIGNAL = 200;
+  static int const  FIRST_CONFIG =          2;
+  static int const  FIRST_INPUT  = 0x3FFF0000;
+  static int const  FIRST_SIGNAL = 0x40000000;
 
 private:
   std::vector<int>  m_clauses;

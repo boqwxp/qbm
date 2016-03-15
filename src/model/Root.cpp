@@ -114,6 +114,16 @@ void Root::dumpClauses(std::ostream &out) const {
 Result Root::solve() {
   if(m_res != QUANTOR_RESULT_UNKNOWN)  return  m_res;
 
+  // Compute displacements to compact range of variables
+  int const  delta_input  =  FIRST_INPUT  - m_confignxt;
+  int const  delta_signal = (FIRST_SIGNAL - m_inputnxt) + delta_input;
+  auto const  compact = [delta_input, delta_signal](int const  v) -> int {
+    int  vv = std::abs(v);
+    if(vv >= FIRST_SIGNAL)      vv -= delta_signal;
+    else if(vv >= FIRST_INPUT)  vv -= delta_input;
+    return  v < 0? -vv : vv;
+  };
+
   qbm::Quantor  q;
 
   q.scope(QUANTOR_EXISTENTIAL_VARIABLE_TYPE);
@@ -121,14 +131,14 @@ Result Root::solve() {
   q.add(0);
 
   q.scope(QUANTOR_UNIVERSAL_VARIABLE_TYPE);
-  for(int  i = FIRST_INPUT; i < m_inputnxt; i++)  q.add(i);
+  for(int  i = FIRST_INPUT; i < m_inputnxt; i++)  q.add(i - delta_input);
   q.add(0);
 
   q.scope(QUANTOR_EXISTENTIAL_VARIABLE_TYPE);
-  for(int  i = FIRST_SIGNAL; i < m_signalnxt; i++)  q.add(i);
+  for(int  i = FIRST_SIGNAL; i < m_signalnxt; i++)  q.add(i - delta_signal);
   q.add(0);
 
-  for(int lit : m_clauses) q.add(lit);
+  for(int lit : m_clauses) q.add(compact(lit));
   m_clauses.clear();
 
   m_res = q.sat();
