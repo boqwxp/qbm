@@ -28,6 +28,8 @@ class ConstExpression;
 class NameExpression;
 class UniExpression;
 class BiExpression;
+class CondExpression;
+class RangeExpression;
 
 class Expression {
 protected:
@@ -46,6 +48,8 @@ public:
     virtual void visit(NameExpression  const &expr) = 0;
     virtual void visit(UniExpression   const &expr) = 0;
     virtual void visit(BiExpression    const &expr) = 0;
+    virtual void visit(CondExpression  const &expr) = 0;
+    virtual void visit(RangeExpression const &expr) = 0;
   };
   virtual void accept(Visitor &vis) const = 0;
 };
@@ -80,8 +84,8 @@ public:
 
 class UniExpression : public Expression {
 public:
-  enum class Op { NOT, NEG };
-  static std::array<char const *const, 3>  OPS;
+  enum class Op { NOT, NEG, LD };
+  static std::array<char const *const, 4>  OPS;
 
 private:
   Op const  m_op;
@@ -125,6 +129,44 @@ public:
   void accept(Visitor &vis) const;
 };
 
+class CondExpression : public Expression {
+  std::shared_ptr<Expression const>  m_cond, m_pos, m_neg;
+
+public:
+  CondExpression(std::shared_ptr<Expression const>  cond,
+		 std::shared_ptr<Expression const>  pos,
+		 std::shared_ptr<Expression const>  neg)
+   : m_cond(cond), m_pos(pos), m_neg(neg) {}
+  ~CondExpression();
+
+public:
+  Expression const& cond() const { return *m_cond; }
+  Expression const& pos () const { return *m_pos; }
+  Expression const& neg () const { return *m_neg; }
+
+public:
+  void accept(Visitor &vis) const;
+};
+
+class RangeExpression : public Expression {
+  std::shared_ptr<Expression const>  m_base, m_left, m_right;
+
+public:
+  RangeExpression(std::shared_ptr<Expression const>  base,
+		  std::shared_ptr<Expression const>  left,
+		  std::shared_ptr<Expression const>  right)
+   : m_base(base), m_left(left), m_right(right) {}
+  ~RangeExpression();
+
+public:
+  Expression const& base () const { return *m_base; }
+  Expression const& left () const { return *m_left; }
+  Expression const& right() const { return *m_right; }
+
+public:
+  void accept(Visitor &vis) const;
+};
+
 class ExpressionPrinter : public Expression::Visitor {
   std::ostream &m_out;
 public:
@@ -133,9 +175,11 @@ public:
 
 public:
   void visit(ConstExpression const &expr);
-  void visit(NameExpression const &expr);
-  void visit(UniExpression const &expr);
-  void visit(BiExpression const &expr);
+  void visit(NameExpression  const &expr);
+  void visit(UniExpression   const &expr);
+  void visit(BiExpression    const &expr);
+  void visit(CondExpression  const &expr);
+  void visit(RangeExpression const &expr);
 };
 
 inline std::ostream &operator<<(std::ostream &out, Expression const& expr) {

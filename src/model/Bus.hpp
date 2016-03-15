@@ -69,11 +69,17 @@ public:
     else  std::fill(dst, dst+len, Node::BOT);
     return  Bus(len, dst);
   }
+  Bus operator~() const {
+    Node const *const  src = m_nodes.get();
+    Node       *const  dst = new Node[m_width];
+    for(unsigned  i = 0; i < m_width; i++)  dst[i] = -src[i];
+    return  Bus(m_width, dst);
+  }
   Bus operator,(Bus const &o) const {
-    Node *const  res = new Node[m_width + o.m_width];
-    std::copy(o.m_nodes.get(), o.m_nodes.get()+o.m_width, res);
-    std::copy(m_nodes.get(), m_nodes.get()+m_width, res+o.m_width);
-    return  Bus(m_width+o.m_width, res);
+    Node *const  dst = new Node[m_width + o.m_width];
+    std::copy(o.m_nodes.get(), o.m_nodes.get()+o.m_width, dst);
+    std::copy(m_nodes.get(), m_nodes.get()+m_width, dst+o.m_width);
+    return  Bus(m_width+o.m_width, dst);
   }
 };
 #endif

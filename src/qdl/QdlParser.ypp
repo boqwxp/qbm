@@ -35,6 +35,7 @@ public:
 # include "Lib.hpp"
 # include <cctype>
 # include <memory>
+# include <limits>
 
   void QdlParser::error(std::string  msg) {
     std::cerr << msg << std::endl;
@@ -173,15 +174,22 @@ public:
 
       case '-':
 	if(in.peek() == '>') {
-	  in.get();
+	  in.ignore();
 	  return  TO;
 	}
 	return  c;
 
       case '*':
 	if(in.peek() == '*') {
-	  in.get();
+	  in.ignore();
 	  return  POWER;
+	}
+	return  c;
+
+      case '/':
+	if(in.peek() == '/') {
+	  in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	  continue;
 	}
 	return  c;
 
@@ -199,9 +207,9 @@ public:
       case '|':
       case '^':
       case '+':
-      case '/':
       case '%':
       case ':':
+      case '?':
 	return  c;
       }
 
@@ -220,6 +228,7 @@ public:
 	if(w == "config")     return  CONFIG;
 	if(w == "signal")     return  SIGNAL;
 	if(w == "end")        return  END;
+	if(w == "ld")	      return  LD;
 
 	sval = w;
 	return  IDENT;
@@ -244,7 +253,7 @@ public:
 
 %%
 %left  POWER
-%token NUMBER IDENT TO COMPONENT CONFIG SIGNAL END
+%token NUMBER IDENT TO LD COMPONENT CONFIG SIGNAL END
 %start comp_decl
 %%
 comp_decl_start : COMPONENT IDENT {
@@ -351,11 +360,17 @@ ex_atom	: NUMBER {
 	| '-' ex_atom {
 	    $$ = std::make_shared<UniExpression>(UniExpression::Op::NEG, $2.expr());
           }
+	| LD ex_atom {
+	    $$ = std::make_shared<UniExpression>(UniExpression::Op::LD, $2.expr());
+          }
 	| '(' expr ')' {
 	    $$ = $2;
 	  }
         | ex_atom '[' expr ']' {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::SEL, $1.expr(), $3.expr());
+          }
+        | ex_atom '[' expr ':' expr ']' {
+	    $$ = std::make_shared<RangeExpression>($1.expr(), $3.expr(), $5.expr());
           }
 	| ex_atom POWER ex_atom {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::POW, $1.expr(), $3.expr());
@@ -387,12 +402,18 @@ ex_logic: ex_mult {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::XOR, $1.expr(), $3.expr());
           }
 
-expr	: ex_logic {
+ex_add  : ex_logic {
 	    $$ = $1;
 	  }
-	| expr '+' ex_logic {
+	| ex_add '+' ex_logic {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::ADD, $1.expr(), $3.expr());
           }
-	| expr '-' ex_logic {
+	| ex_add '-' ex_logic {
 	    $$ = std::make_shared<BiExpression>(BiExpression::Op::SUB, $1.expr(), $3.expr());
+          }
+expr    : ex_add {
+	    $$ = $1;
+	  }
+        | ex_add '?' ex_add ':' expr {
+	    $$ = std::make_shared<CondExpression>($1.expr(), $3.expr(), $5.expr());
           }

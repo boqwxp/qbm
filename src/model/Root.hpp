@@ -29,7 +29,7 @@
 #include <vector>
 
 class Root {
-private:
+public:
   static int const  FIRST_CONFIG =   2;
   static int const  FIRST_INPUT  = 100;
   static int const  FIRST_SIGNAL = 200;
@@ -69,7 +69,6 @@ public:
     for(int  i : m_clauses) {
       if(abs(i) == v)  return  i > 0;
     }
-    std::cerr << "Looking for " << v << std::endl;
     throw "Config variable not found.";
   }
   void printConfig(std::ostream &out) const;

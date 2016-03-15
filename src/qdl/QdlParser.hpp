@@ -41,13 +41,14 @@ enum {
   NUMBER = 257,
   IDENT = 258,
   TO = 259,
-  COMPONENT = 260,
-  CONFIG = 261,
-  SIGNAL = 262,
-  END = 263,
+  LD = 260,
+  COMPONENT = 261,
+  CONFIG = 262,
+  SIGNAL = 263,
+  END = 264,
 };
 private:
-enum { YYINTERN = 264 };
+enum { YYINTERN = 265 };
 static unsigned short const  yyintern[];
 static char const    *const  yyterms[];
 
@@ -57,8 +58,8 @@ static unsigned short const  yylhs   [];
 static char const    *const  yyrules [];
 
 private:
-static unsigned short const  yygoto  [][16];
-static signed   short const  yyaction[][28];
+static unsigned short const  yygoto  [][17];
+static signed   short const  yyaction[][30];
 };
 
 #endif

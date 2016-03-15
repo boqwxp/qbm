@@ -21,6 +21,8 @@
 
 #include "Quantor.hpp"
 
+#include <ostream>
+
 Bus Root::allocateConfig(unsigned  width) {
   Node *const  nodes = new Node[width];
   for(unsigned  i = 0; i < width; i++) {
@@ -45,6 +47,39 @@ Bus Root::allocateSignal(unsigned  width) {
   return  Bus(width, nodes);
 }
 
+namespace {
+  class Lit {
+    int  m_val;
+  public:
+    Lit(int  val) : m_val(val) {}
+    ~Lit() {}
+  public:
+    operator int() const { return  m_val; }
+    operator int&()      { return  m_val; }
+  };
+  std::ostream& operator<<(std::ostream& out, Lit  lit) {
+    int   v = static_cast<int>(lit);
+    char  c = 'X'; // this should not stick!
+    if(v < 0) {
+      out << '~';
+      v = -v;
+    }
+
+    if(v >= Root::FIRST_SIGNAL) {
+      c = 'n';
+      v -= Root::FIRST_SIGNAL;
+    }
+    else if(v >= Root::FIRST_INPUT) {
+      c = 'i';
+      v -= Root::FIRST_INPUT;
+    }
+    else if(v >= Root::FIRST_CONFIG) {
+      c = 'c';
+      v -= Root::FIRST_CONFIG;
+    }
+    return  out << c << v;
+  }
+}
 void Root::addClause(int const *beg, int const *end) {
   auto const  size = m_clauses.size();
   while(beg < end) {
@@ -66,26 +101,7 @@ void Root::addClause(int const *beg, int const *end) {
 void Root::dumpClauses(std::ostream &out) const {
   for(int  v : m_clauses) {
     if(v == 0)  out << std::endl;
-    else {
-      if(v < 0) {
-	out << '~';
-	v = -v;
-      }
-      char  c = 'X'; // this should not stick!
-      if(v >= FIRST_SIGNAL) {
-	c = 'n';
-	v -= FIRST_SIGNAL;
-      }
-      else if(v >= FIRST_INPUT) {
-	c = 'i';
-	v -= FIRST_INPUT;
-      }
-      else if(v >= FIRST_CONFIG) {
-	c = 'c';
-	v -= FIRST_CONFIG;
-      }
-      out << c << v << ' ';
-    }
+    else  out << Lit(v) << ' ';
   }
 }
 
@@ -142,7 +158,5 @@ void Root::printConfig(std::ostream &out) const {
       m_path = prev;
     }
   } prn(out);
-  for(int const  i : m_clauses)  std::cerr << i << ' ';
-  std::cerr << std::endl;
   top().accept(prn);
 }

@@ -27,8 +27,8 @@ void NameExpression::accept(Visitor &vis) const { vis.visit(*this); }
 
 UniExpression::~UniExpression() {}
 void UniExpression::accept(Visitor &vis) const { vis.visit(*this); }
-std::array<char const *const, 3>  UniExpression::OPS = {
-  "~", "-", "??"
+std::array<char const *const, 4>  UniExpression::OPS = {
+  "~", "-", "ld ", "??"
 };
 
 BiExpression::~BiExpression() {}
@@ -36,6 +36,13 @@ void BiExpression::accept(Visitor &vis) const { vis.visit(*this); }
 std::array<char const *const, 11>  BiExpression::OPS = {
   "&", "|", "^", "+", "-", "*", "/", "%", "**", "@", "??"
 };
+
+CondExpression::~CondExpression() {}
+void CondExpression::accept(Visitor &vis) const { vis.visit(*this); }
+
+RangeExpression::~RangeExpression() {}
+void RangeExpression::accept(Visitor &vis) const { vis.visit(*this); }
+
 
 void ExpressionPrinter::visit(ConstExpression const &expr) {
   m_out << expr.value();
@@ -53,4 +60,19 @@ void ExpressionPrinter::visit(BiExpression const &expr) {
   m_out << ')' << BiExpression::OPS[std::min((size_t)expr.op(), BiExpression::OPS.size()-1)] << '(';
   expr.rhs().accept(*this);
   m_out << ')';
+}
+void ExpressionPrinter::visit(CondExpression const &expr) {
+  expr.cond().accept(*this);
+  m_out << "? ";
+  expr.pos().accept(*this);
+  m_out << " : ";
+  expr.neg().accept(*this);
+}
+void ExpressionPrinter::visit(RangeExpression const &expr) {
+  expr.base().accept(*this);
+  m_out << '[';
+  expr.left().accept(*this);
+  m_out << ':';
+  expr.right().accept(*this);
+  m_out << ']';
 }

@@ -3,7 +3,25 @@ component LUT<K>(x[K] -> y)
   y = c[x];
 end;
 
-component top(x[3] -> y)
-  lut0 : LUT<3>(x -> y);
-  y = x[2] & x[1] & x[0];
+component CMUX<K>(x[K] -> y)
+  config c[ld K];
+  y = x[c];
+end;
+
+component ADD<N>(a[N], b[N], cin -> s[N+1])
+  signal  p[N];    // propagates
+  signal  c[N+1];  // carries
+  p      = a ^ b;
+  c[0]   = cin;
+  c[N:1] = p? c[N-1:0] : a;
+  s      = c ^ p;
+end;
+
+component top(a[1], b[1] -> s[2])
+  signal x[2];
+  x[1] = a;
+  x[0] = b;
+  lut_s0 : LUT<2>(x -> s[0]);
+  lut_s1 : LUT<2>(x -> s[1]);
+  fct : ADD<1>(a, b, 0 -> s);
 end;
