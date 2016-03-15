@@ -49,6 +49,11 @@ int Context::computeConstant(Expression const &expr) const {
     void visit(NameExpression const &expr) {
       m_val = m_ctx.resolveConstant(expr.name());
     }
+    void visit(UniExpression const &expr) {
+      switch(expr.op()) {
+      default: throw "Unsupported Operation.";
+      }
+    }
     void visit(BiExpression const &expr) {
       expr.lhs().accept(*this);
       int const  lhs = m_val;
@@ -106,12 +111,19 @@ Bus Context::computeBus(Expression const &expr) {
     void visit(NameExpression const &expr) {
       m_val = m_ctx.resolveBus(expr.name());
     }
+    void visit(UniExpression const &expr) {
+      switch(expr.op()) {
+      default:
+	throw "Unsupported Operation";
+      }
+    }
     void visit(BiExpression const &expr) {
       expr.lhs().accept(*this);
       Bus const  lhs = m_val;
       expr.rhs().accept(*this);
       Bus const  rhs = m_val;
 
+      std::cerr << expr << std::endl;
       std::function<void(Node, Node, Node)>  op;
       switch(expr.op()) {
       case BiExpression::Op::AND:
@@ -149,7 +161,7 @@ Bus Context::computeBus(Expression const &expr) {
 	std::unique_ptr<int[]>  clause(new int[width + 2]);
 	for(unsigned  line = 0; line < range; line++) {
 	  for(unsigned  i = 0; i < width; i++) {
-	    clause[i] = (line & (1<<i)) != 0? -rhs[i] : (unsigned)rhs[i];
+	    clause[i] = (line & (1<<i)) != 0? -rhs[i] : (int)rhs[i];
 	  }
 	  clause[width]   =  lhs[line];
 	  clause[width+1] = -y;
@@ -160,7 +172,7 @@ Bus Context::computeBus(Expression const &expr) {
 	}
 	for(unsigned  line = range; line < (1u << width); line++) {
 	  for(unsigned  i = 0; i < width; i++) {
-	    clause[i] = (line & (1<<i)) != 0? (unsigned)rhs[i] : -rhs[i];
+	    clause[i] = (line & (1<<i)) != 0? -rhs[i] : (int)rhs[i];
 	  }
 	  m_ctx.addClause(clause.get(), clause.get()+width);
 	}

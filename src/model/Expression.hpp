@@ -26,6 +26,7 @@
 
 class ConstExpression;
 class NameExpression;
+class UniExpression;
 class BiExpression;
 
 class Expression {
@@ -43,6 +44,7 @@ public:
   public:
     virtual void visit(ConstExpression const &expr) = 0;
     virtual void visit(NameExpression  const &expr) = 0;
+    virtual void visit(UniExpression   const &expr) = 0;
     virtual void visit(BiExpression    const &expr) = 0;
   };
   virtual void accept(Visitor &vis) const = 0;
@@ -71,6 +73,28 @@ public:
 
 public:
   std::string const& name() const { return  m_name; }
+
+public:
+  void accept(Visitor &vis) const;
+};
+
+class UniExpression : public Expression {
+public:
+  enum class Op { NOT, NEG };
+  static std::array<char const *const, 3>  OPS;
+
+private:
+  Op const  m_op;
+  std::shared_ptr<Expression const>  m_arg;
+
+public:
+  UniExpression(Op const  op, std::shared_ptr<Expression const>  arg)
+    : m_op(op), m_arg(arg) {}
+  ~UniExpression();
+
+public:
+  Op op() const { return  m_op; }
+  Expression const& arg() const { return *m_arg; }
 
 public:
   void accept(Visitor &vis) const;
@@ -110,6 +134,7 @@ public:
 public:
   void visit(ConstExpression const &expr);
   void visit(NameExpression const &expr);
+  void visit(UniExpression const &expr);
   void visit(BiExpression const &expr);
 };
 

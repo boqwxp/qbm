@@ -25,6 +25,12 @@ void ConstExpression::accept(Visitor &vis) const { vis.visit(*this); }
 NameExpression::~NameExpression() {}
 void NameExpression::accept(Visitor &vis) const { vis.visit(*this); }
 
+UniExpression::~UniExpression() {}
+void UniExpression::accept(Visitor &vis) const { vis.visit(*this); }
+std::array<char const *const, 3>  UniExpression::OPS = {
+  "~", "-", "??"
+};
+
 BiExpression::~BiExpression() {}
 void BiExpression::accept(Visitor &vis) const { vis.visit(*this); }
 std::array<char const *const, 11>  BiExpression::OPS = {
@@ -36,6 +42,10 @@ void ExpressionPrinter::visit(ConstExpression const &expr) {
 }
 void ExpressionPrinter::visit(NameExpression const &expr) {
   m_out << expr.name();
+}
+void ExpressionPrinter::visit(UniExpression const &expr) {
+  m_out << UniExpression::OPS[std::min((size_t)expr.op(), UniExpression::OPS.size()-1)];
+  expr.arg().accept(*this);
 }
 void ExpressionPrinter::visit(BiExpression const &expr) {
   m_out << '(';

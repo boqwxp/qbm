@@ -64,11 +64,12 @@ public:
 
 public:
   Component const& top() const { return  m_top; }
-  void solve();
+  Result solve();
   bool resolve(int const  v) const {
     for(int  i : m_clauses) {
       if(abs(i) == v)  return  i > 0;
     }
+    std::cerr << "Looking for " << v << std::endl;
     throw "Config variable not found.";
   }
   void printConfig(std::ostream &out) const;

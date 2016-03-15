@@ -20,6 +20,8 @@
 #ifndef LIB_HPP
 #define LIB_HPP
 
+#include "CompDecl.hpp"
+
 #include <string>
 #include <map>
 #include <memory>
@@ -37,6 +39,9 @@ public:
 
 public:
   CompDecl& declareComponent(std::string const &name);
+  CompDecl const& resolveComponent(std::string const &name) const {
+    return  m_components.at(name);
+  }
   Root* compile(std::string const &top);
 };
 #endif

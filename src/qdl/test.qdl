@@ -1,0 +1,9 @@
+component LUT<K>(x[K] -> y)
+  config c[2**K];
+  y = c[x];
+end;
+
+component top(x[3] -> y)
+  lut0 : LUT<3>(x -> y);
+  y = x[2] & x[1] & x[0];
+end;

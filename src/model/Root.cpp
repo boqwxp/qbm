@@ -89,8 +89,8 @@ void Root::dumpClauses(std::ostream &out) const {
   }
 }
 
-void Root::solve() {
-  if(m_res != QUANTOR_RESULT_UNKNOWN)  return;
+Result Root::solve() {
+  if(m_res != QUANTOR_RESULT_UNKNOWN)  return  m_res;
 
   qbm::Quantor  q;
 
@@ -118,6 +118,7 @@ void Root::solve() {
       m_clauses.push_back(v);
     }
   }
+  return  m_res;
 }
 
 void Root::printConfig(std::ostream &out) const {
@@ -141,5 +142,7 @@ void Root::printConfig(std::ostream &out) const {
       m_path = prev;
     }
   } prn(out);
+  for(int const  i : m_clauses)  std::cerr << i << ' ';
+  std::cerr << std::endl;
   top().accept(prn);
 }

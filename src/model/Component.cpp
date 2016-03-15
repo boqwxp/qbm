@@ -71,6 +71,7 @@ void Component::addComponent(Instantiation        const &inst,
 void Component::accept(Visitor &v) const {
   std::stringstream  bits;
   for(auto const &e : m_configs) {
+    std::cerr << "Resolving " << e.first << '[' << e.second.width() << ']' << std::endl;
     Bus const &bus = e.second;
     for(int  i = bus.width(); i-- > 0;) {
       bits << (m_root.resolve(bus[i])? '1' : '0');
