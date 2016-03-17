@@ -70,7 +70,7 @@ public:
     for(int  i : m_clauses) {
       if(abs(i) == v)  return  i > 0;
     }
-    throw "Config variable not found.";
+    return  false;
   }
   void printConfig(std::ostream &out) const;
 };
