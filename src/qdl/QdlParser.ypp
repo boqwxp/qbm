@@ -226,6 +226,7 @@ public:
 	  w += (char)in.get();
 	}
 	if(w == "component")  return  COMPONENT;
+	if(w == "constant")   return  CONSTANT;
 	if(w == "config")     return  CONFIG;
 	if(w == "signal")     return  SIGNAL;
 	if(w == "end")        return  END;
@@ -254,7 +255,7 @@ public:
 
 %%
 %left  POWER
-%token NUMBER IDENT TO LD COMPONENT CONFIG SIGNAL END
+%token NUMBER IDENT TO LD COMPONENT CONSTANT CONFIG SIGNAL END
 %start comp_decl
 %%
 comp_decl_start : COMPONENT IDENT {
@@ -299,7 +300,10 @@ comp_decl     : comp_decl_body END ';';
               | comp_decl comp_decl_body END ';';
 
 // Statements
-stmt	: CONFIG bus { $$ = std::make_shared<ConfigDecl>($2.name(), $2.width()); }
+stmt	: CONSTANT IDENT '=' expr {
+            $$ = std::make_shared<ConstDecl>($2.name(), $4.expr());
+          }
+        | CONFIG bus { $$ = std::make_shared<ConfigDecl>($2.name(), $2.width()); }
 	| SIGNAL bus { $$ = std::make_shared<SignalDecl>($2.name(), $2.width()); }
         | expr '=' expr { $$ = std::make_shared<Equation>($1.expr(), $3.expr()); }
         | inst_out ')' { $$ = $1; }
