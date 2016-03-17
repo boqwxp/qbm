@@ -33,11 +33,7 @@ component CLB(x[6], cin -> y, cout)
   signal o5;
   lut : LUT6_2(x -> o6, o5);
   cout = o6? cin : o5;
-  signal xorcy;
-  xorcy = cin ^ o6;
-  signal c01;
-  c01 = 1;
-  dmux : CMUX<6>(o6#o5#cout#xorcy#c01 -> y);
+  dmux : CMUX<4>(cout#(cin^o6)#o5#o6 -> y);
 end;
 
 component top(a[5], b[5] -> s[6])

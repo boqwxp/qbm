@@ -1,0 +1,61 @@
+//---------------------------------------------------------------------------
+// General-Purpose Components
+component LUT<K>(x[K] -> y)
+  config c[2**K];
+  y = c[x];
+end;
+
+component CMUX<K>(x[K] -> y)
+  config c[ld K];
+  y = x[c];
+end;
+
+component ADD<N>(a[N], b[N], cin -> s[N+1])
+  signal  p[N];    // propagates
+  signal  c[N+1];  // carries
+  p      = a ^ b;
+  c[0]   = cin;
+  c[N:1] = p? c[N-1:0] : a;
+  s      = c ^ p;
+end;
+
+//---------------------------------------------------------------------------
+// Xilinx Components
+component LUT6_2(x[6] -> o6, o5)
+  signal o5h;
+  hi: LUT<5>(x[4:0] -> o5h);
+  lo: LUT<5>(x[4:0] -> o5);
+  o6 = x[5]? o5h : o5;
+end;
+
+component CLB(x[6], cin -> y[2], cout)
+  signal o6;
+  signal o5;
+  lut : LUT6_2(x -> o6, o5);
+  cout = o6? cin : o5;
+  dmux0 : CMUX<4>(o6#o5#cout#(cin^o6) -> y[0]);
+  y[1] = o6;
+end;
+
+//---------------------------------------------------------------------------
+// Top-Level
+component top(a[2], b[2] -> y[2])
+  constant  N = 2;
+
+  signal s01[2];
+  s01 = 1;
+
+  config cin;
+  signal x0[6];
+  signal cout;
+  x00: CMUX<2*N+2>(a#b#s01 -> x0[0]);
+  x01: CMUX<2*N+2>(a#b#s01 -> x0[1]);
+  x02: CMUX<2*N+2>(a#b#s01 -> x0[2]);
+  x03: CMUX<2*N+2>(a#b#s01 -> x0[3]);
+  x04: CMUX<2*N+2>(a#b#s01 -> x0[4]);
+  x05: CMUX<2*N+2>(a#b#s01 -> x0[5]);
+  clb3: CLB(x0, cin -> y, cout);
+
+  y[1] & y[0] = (a[1] & b[1]) | ((a[1] ^ b[1]) & a[0] & b[0]);
+  y[1] ^ y[0] = (a[1] ^ b[1]) & (a[0] ^ b[0]);
+end;
