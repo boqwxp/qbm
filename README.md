@@ -34,17 +34,14 @@ end;
 * lib/       - the place where Quantor and PicoSat are downloaded and compiled
 * src/model/ - the circuit representation
 * src/qdl/   - the QDL frontend supporting a command-line work flow
+* models/    - example QDL models
 
 ## Quick Start
 ```bash
 > git clone https://github.com/preusser/qbm.git
-> cd qbm/lib
+> cd src/qdl
 > make
-> cd ../src/model
-> make
-> cd ../qdl
-> make
-> ./test < test.qdl
+> ./qdlsolve < test.qdl
 Compiling <top> ...
 Compiling lut_s0 ...
 Compiling lut_s1 ...
