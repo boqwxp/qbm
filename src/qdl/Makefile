@@ -1,16 +1,20 @@
 CXXFLAGS := -std=gnu++11 -Wall -O3 -I../model -I../../lib/quantor-3.2
 CXX      := g++
 CC       := g++
+LIB_DIR  := ../../lib
 
-all: test
+.PHONY: all clean clobber
 
-test: LDFLAGS += -L../../lib
-test: LDLIBS += -lquantor -lsatsolver -lpthread
+all: qdlsolve
 
-test: test.o $(filter-out ../model/test.o,$(wildcard ../model/*.o)) QdlParser.o
+qdlsolve: LDLIBS += -lpthread
+qdlsolve: qdlsolve.o QdlParser.o ../model/libqbm.a $(patsubst %,$(LIB_DIR)/lib%.a, quantor satsolver)
 
 QdlParser.cpp QdlParser.hpp: QdlParser.ypp
 	wisent $<
+
+../model/libqbm.a $(LIB_DIR)/lib%.a:
+	$(MAKE) -C $(dir $@) $(notdir $@)
 
 clobber: clean
 	rm -rf QdlParser.cpp QdlParser.hpp
