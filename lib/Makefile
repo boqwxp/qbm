@@ -5,7 +5,7 @@ PICOSAT := picosat-965
 IPASIR  := riss_505
 
 # Choose one of them
-SATSOLVER := ipasir
+SATSOLVER := picosat
 SATSOLVER_DIR := $($(shell echo $(SATSOLVER) | tr '[a-z]' '[A-Z]'))
 
 .PHONY: all clean clobber
