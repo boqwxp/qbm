@@ -30,6 +30,7 @@ class UniExpression;
 class BiExpression;
 class CondExpression;
 class RangeExpression;
+class ChooseExpression;
 
 class Expression {
 protected:
@@ -44,12 +45,13 @@ public:
     ~Visitor() {}
 
   public:
-    virtual void visit(ConstExpression const &expr) = 0;
-    virtual void visit(NameExpression  const &expr) = 0;
-    virtual void visit(UniExpression   const &expr) = 0;
-    virtual void visit(BiExpression    const &expr) = 0;
-    virtual void visit(CondExpression  const &expr) = 0;
-    virtual void visit(RangeExpression const &expr) = 0;
+    virtual void visit(ConstExpression  const &expr) = 0;
+    virtual void visit(NameExpression   const &expr) = 0;
+    virtual void visit(UniExpression    const &expr) = 0;
+    virtual void visit(BiExpression     const &expr) = 0;
+    virtual void visit(CondExpression   const &expr) = 0;
+    virtual void visit(RangeExpression  const &expr) = 0;
+    virtual void visit(ChooseExpression const &expr) = 0;
   };
   virtual void accept(Visitor &vis) const = 0;
 };
@@ -167,6 +169,20 @@ public:
   void accept(Visitor &vis) const;
 };
 
+class ChooseExpression : public Expression {
+  std::shared_ptr<Expression const>  m_arg;
+  unsigned                           m_cnt;
+
+public:
+  ChooseExpression(std::shared_ptr<Expression const>  arg, unsigned  count)
+    : m_arg(arg), m_cnt(count) {}
+  ~ChooseExpression() {}
+
+public:
+  Expression const& arg  () const { return *m_arg; }
+  unsigned          count() const { return  m_cnt; }
+};
+
 class ExpressionPrinter : public Expression::Visitor {
   std::ostream &m_out;
 public:
@@ -174,12 +190,13 @@ public:
   ~ExpressionPrinter() {}
 
 public:
-  void visit(ConstExpression const &expr);
-  void visit(NameExpression  const &expr);
-  void visit(UniExpression   const &expr);
-  void visit(BiExpression    const &expr);
-  void visit(CondExpression  const &expr);
-  void visit(RangeExpression const &expr);
+  void visit(ConstExpression  const &expr);
+  void visit(NameExpression   const &expr);
+  void visit(UniExpression    const &expr);
+  void visit(BiExpression     const &expr);
+  void visit(CondExpression   const &expr);
+  void visit(RangeExpression  const &expr);
+  void visit(ChooseExpression const &expr);
 };
 
 inline std::ostream &operator<<(std::ostream &out, Expression const& expr) {

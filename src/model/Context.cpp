@@ -20,9 +20,17 @@
 #include "Context.hpp"
 
 #include "CompDecl.hpp"
+
+#include <sstream>
 #include <cmath>
 
 namespace {
+  unsigned log2ceil(unsigned  x) {
+    unsigned  val = 0;
+    for(x = x-1; x != 0; x >>= 1)  val++;
+    return  val;
+  }
+  
   class Computer : public Expression::Visitor {
     Context const &m_ctx;
   public:
@@ -42,14 +50,9 @@ namespace {
     void visit(UniExpression const &expr) override {
       expr.arg().accept(*this);
       switch(expr.op()) {
-      case UniExpression::Op::NOT: m_val = ~m_val; break;
-      case UniExpression::Op::NEG: m_val = -m_val; break;
-      case UniExpression::Op::LD: {
-	unsigned  val = 0;
-	for(unsigned  r = m_val-1; r != 0; r >>= 1)  val++;
-	m_val = val;
-	break;
-      }
+      case UniExpression::Op::NOT: m_val = ~m_val;          break;
+      case UniExpression::Op::NEG: m_val = -m_val;          break;
+      case UniExpression::Op::LD:  m_val = log2ceil(m_val); break;
       default: throw "Unsupported Operation.";
       }
     }
@@ -81,6 +84,9 @@ namespace {
       expr.right().accept(*this);
       int const  right = m_val;
       m_val = (left < right)? 0 : (base >> right) & ((1u<<(left-right+1))-1);
+    }
+    void visit(ChooseExpression const &expr) override {
+      throw "Unsupported Operation.";
     }
   }; // class Computer
 
@@ -218,6 +224,74 @@ namespace {
 
       expr.base().accept(*this);
       m_val = m_val(lo, hi);
+    }
+    void visit(ChooseExpression const &expr) override {
+      auto const  generate_name = [](unsigned const  k) {
+	static unsigned  next_id = 0;
+	std::stringstream  s;
+	s << "CHOOSE<" << k << ">/" << next_id++;
+	return  s.str();
+      };
+
+      expr.arg().accept(*this);
+      Bus      const  arg = m_val;
+      unsigned const  n = arg.width();
+      unsigned const  k = expr.count();
+      if(k >= n)  m_val = (Bus(0, k-n), arg);
+      else {
+	Bus  const  res = m_ctx.allocateSignal(k);
+
+	// Start with selection of k smallest indeces and
+	//   compute the number of different selections (n over k)
+	std::unique_ptr<unsigned[]>  sel(new unsigned[k]);
+	unsigned  cnt = 1;
+	for(unsigned i = 1; i <= k; i++) {
+	  sel[i] = i;
+	  cnt    = (cnt * (n-k+i)) / i;
+	}
+
+	// Generate implicit config bits
+	unsigned const  w   = log2ceil(cnt);
+	Bus      const  cfg = m_ctx.allocateConfig(w);
+	m_ctx.registerConfig(generate_name(k), cfg);
+
+	// Produce the Clauses for each Selection
+	std::unique_ptr<int[]>  clause(new int[w + 2]);
+	for(unsigned  i = 0; i < cnt; i++) {
+	  // Encode the Selection Case
+	  for(unsigned  j = 0; j < w; j++) {
+	    clause[j] = (i & (1<<j)) == 0? (int)cfg[j] : -cfg[j];
+	  }
+
+	  // Output Clauses for all k Connections
+	  for(unsigned  j = 0; j < k; j++) {
+	    clause[w]   =  arg[sel[j]];
+	    clause[w+1] = -res[j];
+	    m_ctx.addClause(clause.get(), clause.get()+w+2);
+	    clause[w]   = -arg[sel[j]];
+	    clause[w+1] =  res[j];
+	    m_ctx.addClause(clause.get(), clause.get()+w+2);
+	  }
+
+	  // Compute next Selection
+	  for(unsigned  j = k; j-- > 0;) {
+	    unsigned const  nv = sel[j]+1;
+	    if(nv <= n-k+j) {
+	      for(unsigned  l = j; l < k; l++)  sel[l] = nv + (l-j);
+	      break;
+	    }
+	  }
+	}
+
+	// Forbid all other cases
+	for(unsigned  i = cnt; i < (1u << w); i++) {
+	  for(unsigned  j = 0; j < w; j++) {
+	    clause[j] = (i & (1<<j)) == 0? (int)cfg[j] : -cfg[j];
+	  }
+	  m_ctx.addClause(clause.get(), clause.get()+w);
+	}
+	m_val = res;
+      }
     }
   }; // class Builder
 }

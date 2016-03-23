@@ -76,3 +76,8 @@ void ExpressionPrinter::visit(RangeExpression const &expr) {
   expr.right().accept(*this);
   m_out << ']';
 }
+void ExpressionPrinter::visit(ChooseExpression const &expr) {
+  m_out << "CHOOSE<" << expr.count() << ">(";
+  expr.arg().accept(*this);
+  m_out << ')';
+}

@@ -28,12 +28,16 @@ class Bus {
   unsigned                     m_width;
   std::shared_ptr<Node const>  m_nodes;
 
-public:
-  Bus() : m_width(0) {}
-  Bus(unsigned  val) {
+private:
+  static unsigned computeBitWidth(unsigned  val) {
     unsigned  width = 0;
     for(unsigned  v = val; v != 0; v >>= 1)  width++;
-    m_width = width;
+    return  width;
+  }
+public:
+  Bus() : m_width(0) {}
+  Bus(unsigned  val) : Bus(val, computeBitWidth(val)) {}
+  Bus(unsigned  val, unsigned  width) : m_width(width) {
     if(width > 0) {
       Node *const  bus = new Node[width];
       for(unsigned  i = 0; i < width; i++) {
