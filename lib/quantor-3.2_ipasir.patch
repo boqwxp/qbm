@@ -1,0 +1,205 @@
+Description: Allow Quantor to interface to an ipasir-compliant SAT solver.
+Author: Thomas B. Preußer <thomas.preusser@utexas.edu>
+Last-Update: 2016-03-22
+===================================================================
+Index:  configure
+	quantor.c
+
+--- quantor-3.2/configure
++++ quantor-3.2_new/configure
+@@ -38,6 +38,7 @@
+ compsatdir=""
+ booleforcedir=""
+ picosatdir=""
++ipasirdir=""
+ #*------------------------------------------------------------------------*#
+ tmp=/tmp/quantor-configure-$$
+ mkdir $tmp || exit 1
+@@ -88,10 +89,11 @@
+   --compsat=<dir>
+   --booleforce=<dir>
+   --picosat=<dir>
++  --ipasir=<dir>
+ 
+ You can force the usage of just one backend solver by
+ 
+-  --solver=(funex|limmat|nanosat|compsat|booleforce|picosat)
++  --solver=(funex|limmat|nanosat|compsat|booleforce|picosat|ipasir)
+ 
+ If debugging is enabled the following two options modify 'CFLAGS' 
+ if not specified to generate profiling data during run time.  This only
+@@ -132,10 +134,11 @@
+     --compsat=*) compsatdir="`expr $1 : '--compsat=\(.*\)'`";;
+     --booleforce=*) booleforcedir="`expr $1 : '--booleforce=\(.*\)'`";;
+     --picosat=*) picosatdir="`expr $1 : '--picosat=\(.*\)'`";;
++    --ipasir=*) ipasirdir="`expr $1 : '--ipasir=\(.*\)'`";;
+     --solver=*)
+       solver="`expr $1 : '--solver=\(.*\)'`";
+       case X"$solver" in
+-        Xfunex|Xlimmat|Xnanosat|Xcompsat|Xbooleforce|Xpicosat);;
++        Xfunex|Xlimmat|Xnanosat|Xcompsat|Xbooleforce|Xpicosat|Xipasir);;
+ 	*) die "invalid argument in '$1'";;
+       esac;
+       ;;
+@@ -320,7 +323,7 @@
+ #*------------------------------------------------------------------------*#
+ if [ $solver = undefined ]
+ then
+-  solvers="funex limmat nanosat compsat booleforce picosat"
++  solvers="funex limmat nanosat compsat booleforce picosat ipasir"
+ else
+   solvers="$solver"
+ fi
+@@ -330,6 +333,7 @@
+ compsat=no
+ booleforce=no
+ picosat=no
++ipasir=no
+ for solver in $solvers
+ do
+   printf "$fmt" $solver
+@@ -667,6 +671,7 @@
+ test $compsat = yes && echo "#define QUANTOR_HAVE_COMPSAT" >> config.h
+ test $booleforce = yes && echo "#define QUANTOR_HAVE_BOOLEFORCE" >> config.h
+ test $picosat = yes && echo "#define QUANTOR_HAVE_PICOSAT" >> config.h
++test $ipasir = yes && echo "#define QUANTOR_HAVE_IPASIR" >> config.h
+ test $fastalloc = yes && echo "#define QUANTOR_FAST_ALLOC" >> config.h
+ test $qbfeval = yes && echo "#define QUANTOR_QBF_EVALUATION_FORMAT" >> config.h
+ test $sig = 64 && echo "#define QUANTOR_SIG64" >> config.h
+@@ -706,6 +711,7 @@
+ cto "compsat" "$compsat"
+ cto "booleforce" "$booleforce"
+ cto "picosat" "$picosat"
++cto "ipasir" "$ipasir"
+ cto "qbfeval" "$qbfeval"
+ cto "havedpi" "$havedpi"
+ [ $havedpi = yes ] && \
+--- quantor-3.2/quantor.c
++++ quantor-3.2_new/quantor.c
+@@ -11712,6 +11712,116 @@
+ }
+ 
+ /*------------------------------------------------------------------------*/
++#ifdef QUANTOR_HAVE_IPASIR
++/*------------------------------------------------------------------------*/
++
++#include "ipasir.h"
++
++typedef struct SatSolverIpasir SatSolverIpasir;
++
++struct SatSolverIpasir
++{
++  SatSolver super;
++  void     *impl;
++};
++
++/*------------------------------------------------------------------------*/
++
++static SatSolverAPI *SatSolverIpasir_get_api(void);
++
++/*------------------------------------------------------------------------*/
++
++static SatSolver*
++SatSolverIpasir_new(Quantor *const  quantor)
++{
++  SatSolverIpasir *const  this = new(quantor, sizeof(*this));
++  SatSolver_init(quantor, &this->super, SatSolverIpasir_get_api());
++
++  if (quantor->opts.verbose >= 2)
++    fprintf(quantor->io.out, "c SAT Solver: %s\n", ipasir_signature());
++
++  this->impl = ipasir_init();
++  return &this->super;
++}
++
++/*------------------------------------------------------------------------*/
++
++static void
++SatSolverIpasir_delete(SatSolver *const  solver)
++{
++  Quantor         *const  quantor = solver->quantor;
++  SatSolverIpasir *const  this    = (SatSolverIpasir*)solver;
++
++  ipasir_release(this->impl);
++  SatSolver_release(solver);
++  delete(quantor, this, sizeof(*this));
++}
++
++/*------------------------------------------------------------------------*/
++
++static int
++SatSolverIpasir_add(SatSolver *const  solver, int const  lit)
++{
++  SatSolverIpasir *const  this = (SatSolverIpasir*)solver;
++  ipasir_add(this->impl, lit);
++  return  1;
++}
++
++/*------------------------------------------------------------------------*/
++
++static QuantorResult
++SatSolverIpasir_run(SatSolver *const  solver)
++{
++  SatSolverIpasir *const  this = (SatSolverIpasir*)solver;
++
++  switch(ipasir_solve(this->impl)) {
++  case 10:  return  QUANTOR_RESULT_SATISFIABLE;
++  case 20:  return  QUANTOR_RESULT_UNSATISFIABLE;
++  default:  return  QUANTOR_RESULT_UNKNOWN;
++  }
++}
++
++/*------------------------------------------------------------------------*/
++
++static void
++SatSolverIpasir_assignment(SatSolver *const  solver)
++{
++  SatSolverIpasir *const  this = (SatSolverIpasir*)solver;
++
++  int pidx;
++
++  SatSolver_init_assignment (solver);
++  assert(!solver->assignment_initialized);
++  for(pidx = 1; pidx <= solver->max_pidx; pidx++)
++    {
++      assert(solver->assignment.start[pidx] == QUANTOR_UNASSIGNED);
++      solver->assignment.start[pidx] = ipasir_val(this->impl, pidx) > 0? QUANTOR_TRUE : QUANTOR_FALSE;
++    }
++  solver->assignment_initialized = 1;
++}
++
++/*------------------------------------------------------------------------*/
++
++static SatSolverAPI ipasir_api = {
++  "ipasir",
++  SatSolverIpasir_new,
++  SatSolverIpasir_delete,
++  SatSolverIpasir_add,
++  SatSolverIpasir_run,
++  SatSolverIpasir_assignment
++};
++
++
++static SatSolverAPI *SatSolverIpasir_get_api() {
++  return &ipasir_api;
++}
++
++/*------------------------------------------------------------------------*/
++#endif /* QUANTOR_HAVE_IPASIR */
++/*------------------------------------------------------------------------*/
++
++
++/*------------------------------------------------------------------------*/
+ #ifdef QUANTOR_HAVE_FUNEX
+ /*------------------------------------------------------------------------*/
+ 
+@@ -12628,6 +12738,9 @@
+ /*------------------------------------------------------------------------*/
+ 
+ static SatSolverAPI *sat_apis[] = {
++#ifdef QUANTOR_HAVE_IPASIR
++  &ipasir_api,
++#endif
+ #ifdef QUANTOR_HAVE_PICOSAT
+   &picosat_api,
+ #endif

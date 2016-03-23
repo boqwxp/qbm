@@ -5,7 +5,7 @@ CC       := g++
 all: test
 
 test: LDFLAGS += -L../../lib
-test: LDLIBS += -lquantor -lpicosat
+test: LDLIBS += -lquantor -lsatsolver -lpthread
 
 test: test.o $(filter-out ../model/test.o,$(wildcard ../model/*.o)) QdlParser.o
 
