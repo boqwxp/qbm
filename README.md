@@ -39,7 +39,7 @@ end;
 ## Quick Start
 ```bash
 > git clone https://github.com/preusser/qbm.git
-> cd src/qdl
+> cd qbm/src/qdl
 > make
 > ./qdlsolve < test.qdl
 Compiling <top> ...
