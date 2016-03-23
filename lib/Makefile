@@ -40,7 +40,7 @@ picosat-%.tar.gz:
 
 # IPASIR: Riss
 %/libipasir.a: $(IPASIR).tar.gz
-	tar xzf $< && cd $* && $(MAKE) && ln -s libipasir$(IPASIR).a libipasir.a
+	tar xzf $< && cd $* && $(MAKE) && ln -sf libipasir$(IPASIR).a libipasir.a
 
 #############################################################################
 clean:
