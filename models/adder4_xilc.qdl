@@ -1,0 +1,55 @@
+//---------------------------------------------------------------------------
+// General-Purpose Components
+component LUT<K>(x[K] -> y)
+  config c[2**K];
+  y = c[x];
+end;
+
+component CMUX<K>(x[K] -> y)
+  config c[ld K];
+  y = x[c];
+end;
+
+component ADD<N>(a[N], b[N], cin -> s[N+1])
+  signal  p[N];    // propagates
+  signal  c[N+1];  // carries
+  p      = a ^ b;
+  c[0]   = cin;
+  c[N:1] = p? c[N-1:0] : a;
+  s      = c ^ p;
+end;
+
+//---------------------------------------------------------------------------
+// Xilinx Components
+component LUT6_2(x[6] -> o6, o5)
+  signal o5h;
+  hi: LUT<5>(x[4:0] -> o5h);
+  lo: LUT<5>(x[4:0] -> o5);
+  o6 = x[5]? o5h : o5;
+end;
+
+component CLB(x[6], cin -> y, cout)
+  signal o6;
+  signal o5;
+  lut : LUT6_2(x -> o6, o5);
+  cout = o6? cin : o5;
+  dmux : CMUX<4>(cout#(cin^o6)#o5#o6 -> y);
+end;
+
+component top(a[4], b[4] -> s[5])
+  constant  N = 4;
+  signal c01[2];
+  c01 = 1;
+
+  fct : ADD<N>(a, b, 0 -> s);
+  signal  cout[N];
+
+  config  cin;
+
+  clb0: CLB(CHOOSE<6>(a#b#c01), cin     -> s[0], cout[0]);
+  clb1: CLB(CHOOSE<6>(a#b#c01), cout[0] -> s[1], cout[1]);
+  clb2: CLB(CHOOSE<6>(a#b#c01), cout[1] -> s[2], cout[2]);
+  clb3: CLB(CHOOSE<6>(a#b#c01), cout[2] -> s[3], cout[3]);
+
+  s[4] = cout[3];
+end;
