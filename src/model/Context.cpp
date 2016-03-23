@@ -248,8 +248,9 @@ namespace {
 	//   compute the number of different selections (n over k)
 	std::unique_ptr<unsigned[]>  sel(new unsigned[k]);
 	unsigned  cnt = 1;
-	for(unsigned i = 1; i <= k; i++) {
+	for(unsigned i = 0; i < k;) {
 	  sel[i] = i;
+	  i++;
 	  cnt    = (cnt * (n-k+i)) / i;
 	}
 
