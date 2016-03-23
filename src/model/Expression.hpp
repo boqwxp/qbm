@@ -170,17 +170,20 @@ public:
 };
 
 class ChooseExpression : public Expression {
-  std::shared_ptr<Expression const>  m_arg;
-  unsigned                           m_cnt;
+  std::shared_ptr<Expression const>  m_width, m_from;
 
 public:
-  ChooseExpression(std::shared_ptr<Expression const>  arg, unsigned  count)
-    : m_arg(arg), m_cnt(count) {}
-  ~ChooseExpression() {}
+  ChooseExpression(std::shared_ptr<Expression const>  width,
+		   std::shared_ptr<Expression const>  from)
+    : m_width(width), m_from(from) {}
+  ~ChooseExpression();
 
 public:
-  Expression const& arg  () const { return *m_arg; }
-  unsigned          count() const { return  m_cnt; }
+  Expression const& width() const { return *m_width; }
+  Expression const& from () const { return *m_from; }
+
+public:
+  void accept(Visitor &vis) const;
 };
 
 class ExpressionPrinter : public Expression::Visitor {

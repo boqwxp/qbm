@@ -233,11 +233,14 @@ namespace {
 	return  s.str();
       };
 
-      expr.arg().accept(*this);
-      Bus      const  arg = m_val;
-      unsigned const  n = arg.width();
-      unsigned const  k = expr.count();
-      if(k >= n)  m_val = (Bus(0, k-n), arg);
+      Computer  comp(m_ctx);
+      expr.width().accept(comp);
+      unsigned const  k = comp.m_val;
+
+      expr.from().accept(*this);
+      Bus      const  from = m_val;
+      unsigned const  n = from.width();
+      if(k >= n)  m_val = (Bus(0, k-n), from);
       else {
 	Bus  const  res = m_ctx.allocateSignal(k);
 
@@ -265,10 +268,10 @@ namespace {
 
 	  // Output Clauses for all k Connections
 	  for(unsigned  j = 0; j < k; j++) {
-	    clause[w]   =  arg[sel[j]];
+	    clause[w]   =  from[sel[j]];
 	    clause[w+1] = -res[j];
 	    m_ctx.addClause(clause.get(), clause.get()+w+2);
-	    clause[w]   = -arg[sel[j]];
+	    clause[w]   = -from[sel[j]];
 	    clause[w+1] =  res[j];
 	    m_ctx.addClause(clause.get(), clause.get()+w+2);
 	  }

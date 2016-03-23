@@ -43,6 +43,9 @@ void CondExpression::accept(Visitor &vis) const { vis.visit(*this); }
 RangeExpression::~RangeExpression() {}
 void RangeExpression::accept(Visitor &vis) const { vis.visit(*this); }
 
+ChooseExpression::~ChooseExpression() {}
+void ChooseExpression::accept(Visitor &vis) const { vis.visit(*this); }
+
 
 void ExpressionPrinter::visit(ConstExpression const &expr) {
   m_out << expr.value();
@@ -77,7 +80,9 @@ void ExpressionPrinter::visit(RangeExpression const &expr) {
   m_out << ']';
 }
 void ExpressionPrinter::visit(ChooseExpression const &expr) {
-  m_out << "CHOOSE<" << expr.count() << ">(";
-  expr.arg().accept(*this);
+  m_out << "CHOOSE<";
+  expr.width().accept(*this);
+  m_out << ">(";
+  expr.from().accept(*this);
   m_out << ')';
 }
