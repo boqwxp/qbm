@@ -18,7 +18,7 @@ component ADD<N>(a[N], b[N], cin -> s[N+1])
 end;
 
 component top(a[2], b[2] -> s[3])
-  lut_s0 : LUT<4>(a#b -> s[0]);
+  lut_s0 : LUT<2>(CHOOSE<2>(a#b) -> s[0]);
   lut_s1 : LUT<4>(a#b -> s[1]);
   lut_s2 : LUT<4>(a#b -> s[2]);
   fct : ADD<2>(a, b, 0 -> s);

@@ -46,10 +46,11 @@ enum {
   CONSTANT = 262,
   CONFIG = 263,
   SIGNAL = 264,
-  END = 265,
+  CHOOSE = 265,
+  END = 266,
 };
 private:
-enum { YYINTERN = 266 };
+enum { YYINTERN = 267 };
 static unsigned short const  yyintern[];
 static char const    *const  yyterms[];
 
@@ -60,7 +61,7 @@ static char const    *const  yyrules [];
 
 private:
 static unsigned short const  yygoto  [][18];
-static signed   short const  yyaction[][32];
+static signed   short const  yyaction[][33];
 };
 
 #endif

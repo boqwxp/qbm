@@ -228,6 +228,7 @@ public:
 	if(w == "component")  return  COMPONENT;
 	if(w == "constant")   return  CONSTANT;
 	if(w == "config")     return  CONFIG;
+	if(w == "CHOOSE")     return  CHOOSE;
 	if(w == "signal")     return  SIGNAL;
 	if(w == "end")        return  END;
 	if(w == "ld")	      return  LD;
@@ -255,7 +256,7 @@ public:
 
 %%
 %left  POWER
-%token NUMBER IDENT TO LD COMPONENT CONSTANT CONFIG SIGNAL END
+%token NUMBER IDENT TO LD COMPONENT CONSTANT CONFIG SIGNAL CHOOSE END
 %start comp_decl
 %%
 comp_decl_start : COMPONENT IDENT {
@@ -368,6 +369,9 @@ ex_atom	: NUMBER {
 	| LD ex_atom {
 	    $$ = std::make_shared<UniExpression>(UniExpression::Op::LD, $2.expr());
           }
+        | CHOOSE '<' expr '>' '(' expr ')' {
+	    $$ = std::make_shared<ChooseExpression>($3.expr(), $6.expr());
+	  }
 	| '(' expr ')' {
 	    $$ = $2;
 	  }
