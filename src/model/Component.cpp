@@ -67,14 +67,13 @@ void Component::addComponent(Instantiation        const &inst,
 }
 
 void Component::accept(Visitor &v) const {
-  std::stringstream  bits;
   for(auto const &e : m_configs) {
     Bus const &bus = e.second;
+    std::stringstream  bits;
     for(int  i = bus.width(); i-- > 0;) {
       bits << (m_root.resolve(bus[i])? '1' : '0');
     }
     v.visitConfig(e.first, bits.str());
-    bits.clear();
   }
 
   for(auto const &e : m_components) {
