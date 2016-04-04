@@ -1,3 +1,5 @@
+CC      := gcc
+
 QUANTOR := quantor-3.2
 
 # Available SAT Solvers
