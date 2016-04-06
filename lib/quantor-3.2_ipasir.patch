@@ -1,49 +1,20 @@
-diff -ruN quantor-3.2/config.h quantor3.2_ipasir/config.h
---- quantor-3.2/config.h	1970-01-01 01:00:00.000000000 +0100
-+++ quantor3.2_ipasir/config.h	2016-04-06 19:52:28.587705666 +0200
-@@ -0,0 +1,39 @@
-+#ifndef QUANTOR_config_h_INCLUDED
-+#define QUANTOR_VERSION "3.2 (IPASIR patch)"
-+#ifndef NDEBUG
-+#define NDEBUG
-+#endif
-+#define QUANTOR_LOG0
-+#define QUANTOR_LOG1
-+#define QUANTOR_LOG2
-+#define QUANTOR_STATS0
-+#define QUANTOR_STATS1
-+#define QUANTOR_FAST_ALLOC
-+#define QUANTOR_HAVE_DOUBLE_PRECISION_INT
-+typedef long DPI;
-+typedef unsigned long Word;
-+typedef unsigned Signature;
-+#define QUANTOR_LIT_ALIGNMENT 32
-+#define QUANTOR_COMPILE_TIME_OPTIONS \
-+"version             3.2 (IPASIR patch)\\n" \
-+"debug               no\\n" \
-+"check               no\\n" \
-+"log                 yes\\n" \
-+"loglevel            2\\n" \
-+"stats               yes\\n" \
-+"statslevel          1\\n" \
-+"CC                  gcc\\n" \
-+"CCVERSION           4.9.2\\n" \
-+"CFLAGS              -Wall -W -O3 -DNDEBUG -fno-strict-aliasing\\n" \
-+"solver              \\n" \
-+"qbfeval             no\\n" \
-+"havedpi             yes\\n" \
-+"DPI                 long\\n" \
-+"Word                unsigned long\\n" \
-+"sig                 32\\n" \
-+"sigref              no\\n" \
-+"Signature           unsigned\\n" \
-+"litalign            32\\n" \
-+"fastalloc           yes\\n" \
-+""
-+#endif
-diff -ruN quantor-3.2/configure quantor3.2_ipasir/configure
---- quantor-3.2/configure	2014-10-26 10:40:21.000000000 +0100
-+++ quantor3.2_ipasir/configure	2016-04-06 19:52:21.791784097 +0200
+Description: Make Quantor to interface its SAT solver as a
+	     statically or dynamically linked IPASIR implementation.
+Reference:   http://fmv.jku.at/quantor/quantor-3.2.tar.gz
+Author: Thomas B. Preußer <thomas.preusser@utexas.edu>
+Apply: ../quantor-3.2> patch -p1 < ../quantor-3.2_ipasir.patch
+Last-Update: 2016-04-06
+===================================================================
+Index:  configure.sh
+        ipasir_dummy.c
+        ipasir.h
+        Makefile.in
+	quantor.c
+	quantor.h
+	VERSION
+
+--- quantor-3.2/configure
++++ quantor3.2_ipasir/configure
 @@ -18,7 +18,7 @@
  stats=yes
  statslevel=undefined
@@ -267,9 +238,8 @@ diff -ruN quantor-3.2/configure quantor3.2_ipasir/configure
  cto "qbfeval" "$qbfeval"
  cto "havedpi" "$havedpi"
  [ $havedpi = yes ] && \
-diff -ruN quantor-3.2/ipasir_dummy.c quantor3.2_ipasir/ipasir_dummy.c
---- quantor-3.2/ipasir_dummy.c	1970-01-01 01:00:00.000000000 +0100
-+++ quantor3.2_ipasir/ipasir_dummy.c	2016-04-05 14:42:41.912289219 +0200
+--- quantor-3.2/ipasir_dummy.c
++++ quantor3.2_ipasir/ipasir_dummy.c
 @@ -0,0 +1,9 @@
 +#include "ipasir.h"
 +#include "stdlib.h"
@@ -280,9 +250,8 @@ diff -ruN quantor-3.2/ipasir_dummy.c quantor3.2_ipasir/ipasir_dummy.c
 +void  ipasir_add(void *impl, int lit) { abort(); }
 +int   ipasir_solve(void *impl)        { abort(); }
 +int   ipasir_val(void *impl, int lit) { abort(); }
-diff -ruN quantor-3.2/ipasir.h quantor3.2_ipasir/ipasir.h
---- quantor-3.2/ipasir.h	1970-01-01 01:00:00.000000000 +0100
-+++ quantor3.2_ipasir/ipasir.h	2016-04-04 15:42:43.063483678 +0200
+--- quantor-3.2/ipasir.h
++++ quantor3.2_ipasir/ipasir.h
 @@ -0,0 +1,112 @@
 +/* Part of the generic incremental SAT API called 'ipasir'.
 + * See 'LICENSE' for rights to use this software.
@@ -396,48 +365,8 @@ diff -ruN quantor-3.2/ipasir.h quantor3.2_ipasir/ipasir.h
 +void ipasir_set_terminate (void * solver, void * state, int (*terminate)(void * state));
 +
 +#endif
-diff -ruN quantor-3.2/Makefile quantor3.2_ipasir/Makefile
---- quantor-3.2/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ quantor3.2_ipasir/Makefile	2016-04-06 19:52:28.583705713 +0200
-@@ -0,0 +1,35 @@
-+CC=gcc
-+AR=ar
-+RANLIB=ranlib
-+LIB=libipasir_dummy.so
-+DEPLIB=libipasir_dummy.so
-+CFLAGS=-Wall -W -O3 -DNDEBUG -fno-strict-aliasing
-+all: quantor
-+
-+# Standalone and static Library
-+quantor: main.o libquantor.a $(DEPLIB)
-+	$(CC) $(CFLAGS) -o $@ main.o -L. -lquantor $(LIB)
-+libquantor.a: quantor.o
-+	$(AR) rc $@ $<
-+	$(RANLIB) $@
-+
-+# Object Dependencies
-+quantor.o: quantor.c options.c quantor.h config.h ipasir.h
-+main.o: main.c quantor.h config.h
-+
-+options.c: genopts options.sh
-+	rm -f $@; ./genopts < options.sh > $@
-+
-+# Dynamically linked DUMMY Solver (will be referenced by DEPLIB if needed)
-+ipasir_dummy.o: CFLAGS += -Wno-unused-parameter -fPIC
-+libipasir_dummy.so: ipasir_dummy.o
-+	$(CC) $(CFLAGS) -shared -Wl,-soname,libipasir.so -o$@ $<
-+
-+# Clean up
-+clean:
-+	rm -f *.o
-+	rm -f quantor libquantor.a libipasir_dummy.so
-+	rm -f *~ gmon.out cscope.out
-+	rm -f *.bbg *.bb *.da *.c.gcov
-+	rm -f config.h Makefile options.c
-+	rm -f log/*.log
-diff -ruN quantor-3.2/Makefile.in quantor3.2_ipasir/Makefile.in
---- quantor-3.2/Makefile.in	2014-10-26 10:45:44.000000000 +0100
-+++ quantor3.2_ipasir/Makefile.in	2016-04-06 19:49:04.126064958 +0200
+--- quantor-3.2/Makefile.in
++++ quantor3.2_ipasir/Makefile.in
 @@ -1,26 +1,34 @@
  CC=@CC@
  AR=@AR@
@@ -481,9 +410,8 @@ diff -ruN quantor-3.2/Makefile.in quantor3.2_ipasir/Makefile.in
  	rm -f *~ gmon.out cscope.out
  	rm -f *.bbg *.bb *.da *.c.gcov
  	rm -f config.h Makefile options.c
-diff -ruN quantor-3.2/quantor.c quantor3.2_ipasir/quantor.c
---- quantor-3.2/quantor.c	2014-10-26 10:40:21.000000000 +0100
-+++ quantor3.2_ipasir/quantor.c	2016-04-05 23:06:15.360029497 +0200
+--- quantor-3.2/quantor.c
++++ quantor3.2_ipasir/quantor.c
 @@ -48,6 +48,7 @@
  
  #include "config.h"
@@ -2480,9 +2408,8 @@ diff -ruN quantor-3.2/quantor.c quantor3.2_ipasir/quantor.c
  
  QuantorResult
  quantor_sat (Quantor * quantor)
-diff -ruN quantor-3.2/quantor.h quantor3.2_ipasir/quantor.h
---- quantor-3.2/quantor.h	2014-10-26 10:40:21.000000000 +0100
-+++ quantor3.2_ipasir/quantor.h	2016-04-05 22:33:15.771284832 +0200
+--- quantor-3.2/quantor.h
++++ quantor3.2_ipasir/quantor.h
 @@ -72,6 +72,7 @@
  const char *quantor_id (void);
  const char *quantor_copyright (void);
@@ -2491,9 +2418,8 @@ diff -ruN quantor-3.2/quantor.h quantor3.2_ipasir/quantor.h
  
  /*------------------------------------------------------------------------*/
  
-diff -ruN quantor-3.2/VERSION quantor3.2_ipasir/VERSION
---- quantor-3.2/VERSION	2014-10-26 10:40:21.000000000 +0100
-+++ quantor3.2_ipasir/VERSION	2016-04-05 23:08:22.078523290 +0200
+--- quantor-3.2/VERSION
++++ quantor3.2_ipasir/VERSION
 @@ -1 +1 @@
 -3.2
 +3.2 (IPASIR patch)
