@@ -1,205 +1,2499 @@
-Description: Allow Quantor to interface to an ipasir-compliant SAT solver.
-Author: Thomas B. Preußer <thomas.preusser@utexas.edu>
-Last-Update: 2016-03-22
-===================================================================
-Index:  configure
-	quantor.c
-
---- quantor-3.2/configure
-+++ quantor-3.2_new/configure
-@@ -38,6 +38,7 @@
- compsatdir=""
- booleforcedir=""
- picosatdir=""
-+ipasirdir=""
+diff -ruN quantor-3.2/config.h quantor3.2_ipasir/config.h
+--- quantor-3.2/config.h	1970-01-01 01:00:00.000000000 +0100
++++ quantor3.2_ipasir/config.h	2016-04-06 19:52:28.587705666 +0200
+@@ -0,0 +1,39 @@
++#ifndef QUANTOR_config_h_INCLUDED
++#define QUANTOR_VERSION "3.2 (IPASIR patch)"
++#ifndef NDEBUG
++#define NDEBUG
++#endif
++#define QUANTOR_LOG0
++#define QUANTOR_LOG1
++#define QUANTOR_LOG2
++#define QUANTOR_STATS0
++#define QUANTOR_STATS1
++#define QUANTOR_FAST_ALLOC
++#define QUANTOR_HAVE_DOUBLE_PRECISION_INT
++typedef long DPI;
++typedef unsigned long Word;
++typedef unsigned Signature;
++#define QUANTOR_LIT_ALIGNMENT 32
++#define QUANTOR_COMPILE_TIME_OPTIONS \
++"version             3.2 (IPASIR patch)\\n" \
++"debug               no\\n" \
++"check               no\\n" \
++"log                 yes\\n" \
++"loglevel            2\\n" \
++"stats               yes\\n" \
++"statslevel          1\\n" \
++"CC                  gcc\\n" \
++"CCVERSION           4.9.2\\n" \
++"CFLAGS              -Wall -W -O3 -DNDEBUG -fno-strict-aliasing\\n" \
++"solver              \\n" \
++"qbfeval             no\\n" \
++"havedpi             yes\\n" \
++"DPI                 long\\n" \
++"Word                unsigned long\\n" \
++"sig                 32\\n" \
++"sigref              no\\n" \
++"Signature           unsigned\\n" \
++"litalign            32\\n" \
++"fastalloc           yes\\n" \
++""
++#endif
+diff -ruN quantor-3.2/configure quantor3.2_ipasir/configure
+--- quantor-3.2/configure	2014-10-26 10:40:21.000000000 +0100
++++ quantor3.2_ipasir/configure	2016-04-06 19:52:21.791784097 +0200
+@@ -18,7 +18,7 @@
+ stats=yes
+ statslevel=undefined
+ stmtcoverage=no
+-solver=undefined
++solver=''
+ if true
+ then
+   static=no
+@@ -28,16 +28,8 @@
+   qbfeval=yes
+ fi
+ #*------------------------------------------------------------------------*#
+-DEPHEADERS=""
+ DEPLIB=""
+-INC=""
+ LIB=""
+-funexdir=""
+-limmatdir=""
+-nanosatdir=""
+-compsatdir=""
+-booleforcedir=""
+-picosatdir=""
  #*------------------------------------------------------------------------*#
  tmp=/tmp/quantor-configure-$$
  mkdir $tmp || exit 1
-@@ -88,10 +89,11 @@
-   --compsat=<dir>
-   --booleforce=<dir>
-   --picosat=<dir>
-+  --ipasir=<dir>
+@@ -80,18 +72,15 @@
+   --qbfeval       assume SAT05 evaluation of QBF solvers command line API
+   --no-qbfeval    enforce standard command line API
  
- You can force the usage of just one backend solver by
+-Specify the source directory of the backend SAT solver:
++Specify the library for the backend SAT solver implementing the IPASIR API:
  
+-  --funex=<dir>
+-  --limmat=<dir>
+-  --nanosat=<dir>
+-  --compsat=<dir>
+-  --booleforce=<dir>
+-  --picosat=<dir>
++  --solver=<PATH/libXXX.a>
++  --solver=<PATH/libXXX.so>
+ 
+-You can force the usage of just one backend solver by
+-
 -  --solver=(funex|limmat|nanosat|compsat|booleforce|picosat)
-+  --solver=(funex|limmat|nanosat|compsat|booleforce|picosat|ipasir)
++  default: libipasir_dummy.so
++    - A dummy library with this name and libipasir.so as soname comes with
++      Quantor and is used for linking without external dependencies.
++    - An actual implementation is needed in the library path at runtime.
  
  If debugging is enabled the following two options modify 'CFLAGS' 
  if not specified to generate profiling data during run time.  This only
-@@ -132,10 +134,11 @@
-     --compsat=*) compsatdir="`expr $1 : '--compsat=\(.*\)'`";;
-     --booleforce=*) booleforcedir="`expr $1 : '--booleforce=\(.*\)'`";;
-     --picosat=*) picosatdir="`expr $1 : '--picosat=\(.*\)'`";;
-+    --ipasir=*) ipasirdir="`expr $1 : '--ipasir=\(.*\)'`";;
-     --solver=*)
-       solver="`expr $1 : '--solver=\(.*\)'`";
-       case X"$solver" in
+@@ -126,19 +115,7 @@
+     --sigref) sigref=yes;;
+     -s) stmtcoverage=yes;;
+     -f) funcoverage=yes;;
+-    --funex=*) funexdir="`expr $1 : '--funex=\(.*\)'`";;
+-    --limmat=*) limmatdir="`expr $1 : '--limmat=\(.*\)'`";;
+-    --nanosat=*) nanosatdir="`expr $1 : '--nanosat=\(.*\)'`";;
+-    --compsat=*) compsatdir="`expr $1 : '--compsat=\(.*\)'`";;
+-    --booleforce=*) booleforcedir="`expr $1 : '--booleforce=\(.*\)'`";;
+-    --picosat=*) picosatdir="`expr $1 : '--picosat=\(.*\)'`";;
+-    --solver=*)
+-      solver="`expr $1 : '--solver=\(.*\)'`";
+-      case X"$solver" in
 -        Xfunex|Xlimmat|Xnanosat|Xcompsat|Xbooleforce|Xpicosat);;
-+        Xfunex|Xlimmat|Xnanosat|Xcompsat|Xbooleforce|Xpicosat|Xipasir);;
- 	*) die "invalid argument in '$1'";;
-       esac;
-       ;;
-@@ -320,7 +323,7 @@
+-	*) die "invalid argument in '$1'";;
+-      esac;
+-      ;;
++    --solver=*) solver="`expr $1 : '--solver=\(.*\)'`";;
+     --cross) cross=yes;;
+     --sig*) 
+       sig="`expr $1 : '--sig\(.*\)'`"
+@@ -318,73 +295,37 @@
+ esac
+ echo " $RAWCFLAGS"
  #*------------------------------------------------------------------------*#
- if [ $solver = undefined ]
- then
+-if [ $solver = undefined ]
+-then
 -  solvers="funex limmat nanosat compsat booleforce picosat"
-+  solvers="funex limmat nanosat compsat booleforce picosat ipasir"
- else
-   solvers="$solver"
+-else
+-  solvers="$solver"
+-fi
+-funex=no
+-limmat=no
+-nanosat=no
+-compsat=no
+-booleforce=no
+-picosat=no
+-for solver in $solvers
+-do
+-  printf "$fmt" $solver
+-  found=yes
+-  solverdir=${solver}dir
+-  eval "dir=\$$solverdir"
+-  if [ "$dir" = "" ]
+-  then
+-    if [ -d ../$solver ]
+-    then
+-      dir=../$solver
+-    else
+-      echo " no (no $solver directory found)"
+-      found=no
+-    fi
+-  fi
+-  if [ ! -d $dir ]
+-  then
+-    echo " no ('$dir' is not a directory)"
+-    found=no
+-  fi
+-  if [ $found = yes ]
+-  then
+-    if [ -f $dir/$solver.h ]
+-    then
+-      if [ -f $dir/lib$solver.a ]
+-      then
+-	found=yes
+-	[ "$INC" = "" ] || INC="$INC "
+-	INC="${INC}-I$dir"
+-	[ "$LIB" = "" ] || LIB="$LIB "
+-	LIB="${LIB}-L$dir -l$solver"
+-	[ "$DEPHEADERS" = "" ] || DEPHEADERS="$DEPHEADERS "
+-	DEPHEADERS="$DEPHEADERS$dir/$solver.h"
+-	[ "$DEPLIB" = "" ] || DEPLIB="$DEPLIB "
+-	DEPLIB="$DEPLIB$dir/lib$solver.a"
+-      else
+-	echo " no (could not find '$dir/lib$solver.a')"
+-	found=no
+-      fi
+-    else
+-      echo " no (could not find '$dir/$solver.h')"
+-      found=no
++printf "$fmt" 'SAT Solver'
++if [ -n "$solver" ]; then
++  solverpath=$(dirname "$solver")
++  solvername=$(expr "$(basename "$solver")" : 'lib\(.*\).\(so\|a\)$')
++
++  found=no
++  if [ -d "$solverpath" ]; then
++    if [ -r "$solver" ]; then
++      [ "$LIB" = "" ] || LIB="$LIB "
++      LIB="${LIB}-L$solverpath -l$solvername"
++      [ "$DEPLIB" = "" ] || DEPLIB="$DEPLIB "
++      DEPLIB="${DEPLIB}$solver"
++	  
++      echo  " found: $solvername ($solver)"
++      found=yes
+     fi
+   fi
+-  if [ $found = yes ]
+-  then
+-    echo " yes (in '$dir')"
++
++  if [ $found = no ]; then
++    printf " not found:"
++    solver=''  
+   fi
+-  eval "$solver=$found"
+-  eval "${solver}dir=$dir"
+-done
+-#*------------------------------------------------------------------------*#
+-printf "$fmt" INC
+-echo " $INC"
++fi
++if [ -z "$solver" ]; then
++  [ "$LIB" = "" ] || LIB="$LIB "
++  LIB="${LIB}libipasir_dummy.so"
++  [ "$DEPLIB" = "" ] || DEPLIB="$DEPLIB "
++  DEPLIB="${DEPLIB}libipasir_dummy.so"
++
++  echo " using libipasir_dummy.so"
++fi
+ #*------------------------------------------------------------------------*#
+ printf "$fmt" LIB
+ echo " $LIB"
+@@ -563,6 +504,7 @@
+   -e '/QUANTOR_LIT_ALIGNMENT/,$d' \
+   -e '/#include "quantor.h"/d' \
+   -e '/#include "config.h"/d' \
++  -e '/#include "ipasir.h"/d' \
+   quantor.c >> $tmp/litalign.c
+ cat <<EOF >>$tmp/litalign.c
+ };
+@@ -621,11 +563,10 @@
+ rm -f Makefile
+ sed \
+   -e "s,@CC@,$CC," \
++  -e "s,@ALL@,$ALL," \
+   -e "s,@CFLAGS@,$CFLAGS," \
+-  -e "s,@INC@,$INC," \
+   -e "s,@LIB@,$LIB," \
+   -e "s,@DEPLIB@,$DEPLIB," \
+-  -e "s,@DEPHEADERS@,$DEPHEADERS," \
+   -e "s,@AR@,$AR,g" \
+   -e "s,@RANLIB@,$RANLIB,g" \
+   Makefile.in > Makefile
+@@ -661,12 +602,6 @@
+   done
  fi
-@@ -330,6 +333,7 @@
- compsat=no
- booleforce=no
- picosat=no
-+ipasir=no
- for solver in $solvers
- do
-   printf "$fmt" $solver
-@@ -667,6 +671,7 @@
- test $compsat = yes && echo "#define QUANTOR_HAVE_COMPSAT" >> config.h
- test $booleforce = yes && echo "#define QUANTOR_HAVE_BOOLEFORCE" >> config.h
- test $picosat = yes && echo "#define QUANTOR_HAVE_PICOSAT" >> config.h
-+test $ipasir = yes && echo "#define QUANTOR_HAVE_IPASIR" >> config.h
+ test $check = yes && echo "#define QUANTOR_CHECK" >> config.h
+-test $funex = yes && echo "#define QUANTOR_HAVE_FUNEX" >> config.h
+-test $limmat = yes && echo "#define QUANTOR_HAVE_LIMMAT" >> config.h
+-test $nanosat = yes && echo "#define QUANTOR_HAVE_NANOSAT" >> config.h
+-test $compsat = yes && echo "#define QUANTOR_HAVE_COMPSAT" >> config.h
+-test $booleforce = yes && echo "#define QUANTOR_HAVE_BOOLEFORCE" >> config.h
+-test $picosat = yes && echo "#define QUANTOR_HAVE_PICOSAT" >> config.h
  test $fastalloc = yes && echo "#define QUANTOR_FAST_ALLOC" >> config.h
  test $qbfeval = yes && echo "#define QUANTOR_QBF_EVALUATION_FORMAT" >> config.h
  test $sig = 64 && echo "#define QUANTOR_SIG64" >> config.h
-@@ -706,6 +711,7 @@
- cto "compsat" "$compsat"
- cto "booleforce" "$booleforce"
- cto "picosat" "$picosat"
-+cto "ipasir" "$ipasir"
+@@ -700,12 +635,7 @@
+ cto "CC" "$CC"
+ cto "CCVERSION" "$CCVERSION"
+ cto "CFLAGS" "$CFLAGS"
+-cto "funex" "$funex"
+-cto "limmat" "$limmat"
+-cto "nanosat" "$nanosat"
+-cto "compsat" "$compsat"
+-cto "booleforce" "$booleforce"
+-cto "picosat" "$picosat"
++cto "solver" "$solver"
  cto "qbfeval" "$qbfeval"
  cto "havedpi" "$havedpi"
  [ $havedpi = yes ] && \
---- quantor-3.2/quantor.c
-+++ quantor-3.2_new/quantor.c
-@@ -11712,6 +11712,116 @@
+diff -ruN quantor-3.2/ipasir_dummy.c quantor3.2_ipasir/ipasir_dummy.c
+--- quantor-3.2/ipasir_dummy.c	1970-01-01 01:00:00.000000000 +0100
++++ quantor3.2_ipasir/ipasir_dummy.c	2016-04-05 14:42:41.912289219 +0200
+@@ -0,0 +1,9 @@
++#include "ipasir.h"
++#include "stdlib.h"
++
++char const* ipasir_signature() { return "<dummy>"; }
++void* ipasir_init()                   { abort(); }
++void  ipasir_release(void *impl)      { abort(); }
++void  ipasir_add(void *impl, int lit) { abort(); }
++int   ipasir_solve(void *impl)        { abort(); }
++int   ipasir_val(void *impl, int lit) { abort(); }
+diff -ruN quantor-3.2/ipasir.h quantor3.2_ipasir/ipasir.h
+--- quantor-3.2/ipasir.h	1970-01-01 01:00:00.000000000 +0100
++++ quantor3.2_ipasir/ipasir.h	2016-04-04 15:42:43.063483678 +0200
+@@ -0,0 +1,112 @@
++/* Part of the generic incremental SAT API called 'ipasir'.
++ * See 'LICENSE' for rights to use this software.
++ */
++#ifndef ipasir_h_INCLUDED
++#define ipasir_h_INCLUDED
++
++/**
++ * Return the name and the version of the incremental SAT
++ * solving library.
++ */
++const char * ipasir_signature ();
++
++/**
++ * Construct a new solver and return a pointer to it.
++ * Use the returned pointer as the first parameter in each
++ * of the following functions.
++ *
++ * Required state: N/A
++ * State after: INPUT
++ */
++void * ipasir_init ();
++
++/**
++ * Release the solver, i.e., all its resoruces and
++ * allocated memory (destructor). The solver pointer
++ * cannot be used for any purposes after this call.
++ *
++ * Required state: INPUT or SAT or UNSAT
++ * State after: undefined
++ */
++void ipasir_release (void * solver);
++
++/**
++ * Add the given literal into the currently added clause
++ * or finalize the clause with a 0.  Clauses added this way
++ * cannot be removed. The addition of removable clauses
++ * can be simulated using activation literals and assumptions.
++ *
++ * Required state: INPUT or SAT or UNSAT
++ * State after: INPUT
++ *
++ * Literals are encoded as (non-zero) integers as in the
++ * DIMACS formats.  They have to be smaller or equal to
++ * INT_MAX and strictly larger than INT_MIN (to avoid
++ * negation overflow).  This applies to all the literal
++ * arguments in API functions.
++ */
++void ipasir_add (void * solver, int lit_or_zero);
++
++/**
++ * Add an assumption for the next SAT search (the next call
++ * of ipasir_solve). After calling ipasir_solve all the
++ * previously added assumptions are cleared.
++ *
++ * Required state: INPUT or SAT or UNSAT
++ * State after: INPUT
++ */
++void ipasir_assume (void * solver, int lit);
++
++/**
++ * Solve the formula with specified clauses under the specified assumptions.
++ * If the formula is satisfiable the function returns 10 and the state of the solver is changed to SAT.
++ * If the formula is unsatisfiable the function returns 20 and the state of the solver is changed to UNSAT.
++ * If the search is interrupted (see ipasir_set_terminate) the function returns 0 and the state of the solver remains INPUT.
++ * This function can be called in any defined state of the solver.
++ *
++ * Required state: INPUT or SAT or UNSAT
++ * State after: INPUT or SAT or UNSAT
++ */
++int ipasir_solve (void * solver);
++
++/**
++ * Get the truth value of the given literal in the found satisfying
++ * assignment. Return 'lit' if True, '-lit' if False, and 0 if not important.
++ * This function can only be used if ipasir_solve has returned 10
++ * and no 'ipasir_add' nor 'ipasir_assume' has been called
++ * since then, i.e., the state of the solver is SAT.
++ *
++ * Required state: SAT
++ * State after: SAT
++ */
++int ipasir_val (void * solver, int lit);
++
++/**
++ * Check if the given assumption literal was used to prove the
++ * unsatisfiability of the formula under the assumptions
++ * used for the last SAT search. Return 1 if so, 0 otherwise.
++ * This function can only be used if ipasir_solve has returned 20 and
++ * no ipasir_add or ipasir_assume has been called since then, i.e.,
++ * the state of the solver is UNSAT.
++ *
++ * Required state: UNSAT
++ * State after: UNSAT
++ */
++int ipasir_failed (void * solver, int lit);
++
++/**
++ * Set a callback function used to indicate a termination requirement to the
++ * solver. The solver will periodically call this function and check its return
++ * value during the search. The ipasir_set_terminate function can be called in any
++ * state of the solver, the state remains unchanged after the call.
++ * The callback function is of the form "int terminate(void * state)"
++ *   - it returns a non-zero value if the solver should terminate.
++ *   - the solver calls the callback function with the parameter "state"
++ *     having the value passed in the ipasir_set_terminate function (2nd parameter).
++ *
++ * Required state: INPUT or SAT or UNSAT
++ * State after: INPUT or SAT or UNSAT
++ */
++void ipasir_set_terminate (void * solver, void * state, int (*terminate)(void * state));
++
++#endif
+diff -ruN quantor-3.2/Makefile quantor3.2_ipasir/Makefile
+--- quantor-3.2/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ quantor3.2_ipasir/Makefile	2016-04-06 19:52:28.583705713 +0200
+@@ -0,0 +1,35 @@
++CC=gcc
++AR=ar
++RANLIB=ranlib
++LIB=libipasir_dummy.so
++DEPLIB=libipasir_dummy.so
++CFLAGS=-Wall -W -O3 -DNDEBUG -fno-strict-aliasing
++all: quantor
++
++# Standalone and static Library
++quantor: main.o libquantor.a $(DEPLIB)
++	$(CC) $(CFLAGS) -o $@ main.o -L. -lquantor $(LIB)
++libquantor.a: quantor.o
++	$(AR) rc $@ $<
++	$(RANLIB) $@
++
++# Object Dependencies
++quantor.o: quantor.c options.c quantor.h config.h ipasir.h
++main.o: main.c quantor.h config.h
++
++options.c: genopts options.sh
++	rm -f $@; ./genopts < options.sh > $@
++
++# Dynamically linked DUMMY Solver (will be referenced by DEPLIB if needed)
++ipasir_dummy.o: CFLAGS += -Wno-unused-parameter -fPIC
++libipasir_dummy.so: ipasir_dummy.o
++	$(CC) $(CFLAGS) -shared -Wl,-soname,libipasir.so -o$@ $<
++
++# Clean up
++clean:
++	rm -f *.o
++	rm -f quantor libquantor.a libipasir_dummy.so
++	rm -f *~ gmon.out cscope.out
++	rm -f *.bbg *.bb *.da *.c.gcov
++	rm -f config.h Makefile options.c
++	rm -f log/*.log
+diff -ruN quantor-3.2/Makefile.in quantor3.2_ipasir/Makefile.in
+--- quantor-3.2/Makefile.in	2014-10-26 10:45:44.000000000 +0100
++++ quantor3.2_ipasir/Makefile.in	2016-04-06 19:49:04.126064958 +0200
+@@ -1,26 +1,34 @@
+ CC=@CC@
+ AR=@AR@
+ RANLIB=@RANLIB@
+-INC=@INC@
+ LIB=@LIB@
+ DEPLIB=@DEPLIB@
+-DEPHEADERS=@DEPHEADERS@
+ CFLAGS=@CFLAGS@
+ all: quantor
++
++# Standalone and static Library
+ quantor: main.o libquantor.a $(DEPLIB)
+ 	$(CC) $(CFLAGS) -o $@ main.o -L. -lquantor $(LIB)
+-quantor.o: quantor.c options.c quantor.h config.h $(DEPHEADERS)
+-	$(CC) $(CFLAGS) $(INC) -c quantor.c
+ libquantor.a: quantor.o
+-	$(AR) rc $@ quantor.o
++	$(AR) rc $@ $<
+ 	$(RANLIB) $@
++
++# Object Dependencies
++quantor.o: quantor.c options.c quantor.h config.h ipasir.h
++main.o: main.c quantor.h config.h
++
+ options.c: genopts options.sh
+ 	rm -f $@; ./genopts < options.sh > $@
+-main.o: main.c quantor.h config.h
+-	$(CC) $(CFLAGS) -c $(INC) main.c
++
++# Dynamically linked DUMMY Solver (will be referenced by DEPLIB if needed)
++ipasir_dummy.o: CFLAGS += -Wno-unused-parameter -fPIC
++libipasir_dummy.so: ipasir_dummy.o
++	$(CC) $(CFLAGS) -shared -Wl,-soname,libipasir.so -o$@ $<
++
++# Clean up
+ clean:
+ 	rm -f *.o
+-	rm -f quantor libquantor.a
++	rm -f quantor libquantor.a libipasir_dummy.so
+ 	rm -f *~ gmon.out cscope.out
+ 	rm -f *.bbg *.bb *.da *.c.gcov
+ 	rm -f config.h Makefile options.c
+diff -ruN quantor-3.2/quantor.c quantor3.2_ipasir/quantor.c
+--- quantor-3.2/quantor.c	2014-10-26 10:40:21.000000000 +0100
++++ quantor3.2_ipasir/quantor.c	2016-04-05 23:06:15.360029497 +0200
+@@ -48,6 +48,7 @@
+ 
+ #include "config.h"
+ #include "quantor.h"
++#include "ipasir.h"
+ 
+ /*------------------------------------------------------------------------*/
+ 
+@@ -134,8 +135,6 @@
+ typedef struct CacheStats CacheStats;
+ typedef struct CountStats CountStats;
+ typedef struct Var Var;
+-typedef struct SatSolver SatSolver;
+-typedef struct SatSolverAPI SatSolverAPI;
+ typedef struct IOpt IOpt;
+ typedef struct DOpt DOpt;
+ typedef union OptData OptData;
+@@ -909,8 +908,6 @@
+   FunctionAnchor functions;
+   FunctionAnchor dying_functions;
+ 
+-  SatSolverAPI *sat_api;
+-
+   IO io;
+   char cost_buffer[20];
+   char scope_buffer[20];
+@@ -948,30 +945,6 @@
+ 
+ /*------------------------------------------------------------------------*/
+ 
+-struct SatSolverAPI
+-{
+-  const char *name;
+-  SatSolver *(*new) (Quantor *);
+-  void (*delete) (SatSolver *);
+-  int (*add) (SatSolver *, int);
+-    QuantorResult (*run) (SatSolver *);
+-  void (*assignment) (SatSolver *);
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-struct SatSolver
+-{
+-  SatSolverAPI *api;
+-  Quantor *quantor;
+-  int max_pidx;
+-  int assignment_initialized;
+-  PtrStack assignment;
+-  IntStack idx2pidx;
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+ struct LitItAPI
+ {
+   int (*done) (LitIt *, int *next_int_lit_ptr);
+@@ -11495,180 +11468,6 @@
  }
  
  /*------------------------------------------------------------------------*/
-+#ifdef QUANTOR_HAVE_IPASIR
-+/*------------------------------------------------------------------------*/
-+
-+#include "ipasir.h"
-+
-+typedef struct SatSolverIpasir SatSolverIpasir;
-+
-+struct SatSolverIpasir
-+{
-+  SatSolver super;
-+  void     *impl;
-+};
-+
-+/*------------------------------------------------------------------------*/
-+
-+static SatSolverAPI *SatSolverIpasir_get_api(void);
-+
-+/*------------------------------------------------------------------------*/
-+
-+static SatSolver*
-+SatSolverIpasir_new(Quantor *const  quantor)
-+{
-+  SatSolverIpasir *const  this = new(quantor, sizeof(*this));
-+  SatSolver_init(quantor, &this->super, SatSolverIpasir_get_api());
-+
-+  if (quantor->opts.verbose >= 2)
-+    fprintf(quantor->io.out, "c SAT Solver: %s\n", ipasir_signature());
-+
-+  this->impl = ipasir_init();
-+  return &this->super;
-+}
-+
-+/*------------------------------------------------------------------------*/
-+
-+static void
-+SatSolverIpasir_delete(SatSolver *const  solver)
-+{
-+  Quantor         *const  quantor = solver->quantor;
-+  SatSolverIpasir *const  this    = (SatSolverIpasir*)solver;
-+
-+  ipasir_release(this->impl);
-+  SatSolver_release(solver);
-+  delete(quantor, this, sizeof(*this));
-+}
-+
-+/*------------------------------------------------------------------------*/
-+
+-
+-static void
+-SatSolver_init (Quantor * quantor, SatSolver * solver, SatSolverAPI * api)
+-{
+-  solver->api = api;
+-  solver->quantor = quantor;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolver_release (SatSolver * solver)
+-{
+-  release_PtrStack (solver->quantor, &solver->assignment);
+-  release_IntStack (solver->quantor, &solver->idx2pidx);
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-SatSolver_lit2plit (SatSolver * solver, int lit)
+-{
+-  int sign, plit, idx, pidx, *p;
+-
+-  sign = (lit < 0) ? -1 : 1;
+-  idx = (sign < 0) ? -lit : lit;
+-  p = access_IntStack (solver->quantor, &solver->idx2pidx, idx);
+-  if (!*p)
+-    {
+-      pidx = ++solver->max_pidx;
+-      *p = pidx;
+-#ifdef QUANTOR_LOG5
+-      LOG (solver->quantor, 5,
+-	   "MAPPING IDX=%d TO PIDX=%d FOR \"%s\"",
+-	   idx, pidx, solver->api->name);
+-#endif
+-    }
+-
+-  pidx = *p;
+-  plit = pidx * sign;
+-
+-  return plit;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-SatSolver_copy (SatSolver * solver, LitIt * it)
+-{
+-  int plit, lit, count_clauses, count_literals, ok;
+-  Quantor *quantor = solver->quantor;
+-  double time, delta;
+-#ifndef NDEBUG
+-  int pidx;
+-#endif
+-
+-  time = get_time ();
+-  count_clauses = count_literals = 0;
+-  ok = 1;
+-
+-  while (ok && !it->api->done (it, &lit))
+-    {
+-      if (lit)
+-	{
+-	  plit = SatSolver_lit2plit (solver, lit);
+-	  count_literals++;
+-	}
+-      else
+-	{
+-	  plit = 0;
+-	  count_clauses++;
+-	}
+-#ifndef NDEBUG
+-      pidx = (plit < 0) ? -plit : plit;
+-      assert (0 <= pidx);
+-      assert (pidx <= solver->max_pidx);
+-#endif
+-      ok = solver->api->add (solver, plit);
+-    }
+-
+-  if (quantor->opts.verbose)
+-    {
+-      delta = get_time () - time;
+-      delta = (delta < 0) ? 0 : delta;
+-#ifdef QUANTOR_LOG1
+-      LOG (quantor, 1, ok ? "COPIED" : "COPIED ONLY");
+-      LOG (quantor, 1, "  %d CLAUSES", count_clauses);
+-      LOG (quantor, 1, "  %d LITERALS", count_literals);
+-      LOG (quantor, 1, "  %d MAX VARIABLE INDEX", solver->max_pidx);
+-      LOG (quantor, 1, "IN %.2f SECONDS", delta);
+-      if (!ok)
+-	LOG (quantor, 1, "COPYING FAILED");
+-#endif
+-    }
+-
+-  return ok;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolver_init_assignment (SatSolver * solver)
+-{
+-  int pidx;
+-
+-  assert (!solver->assignment_initialized);
+-
+-  /* We need to start at the invalid index 'pidx == 0'.
+-   */
+-  for (pidx = 0; pidx <= solver->max_pidx; pidx++)
+-    push_PtrStack (solver->quantor, &solver->assignment, QUANTOR_UNASSIGNED);
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#if defined(QUANTOR_HAVE_LIMMAT) || \
+-    defined(QUANTOR_HAVE_FUNEX)
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolver_set_assignment (SatSolver * solver, const int *assignment)
+-{
+-  int plit, pidx;
+-  const int *p;
+-  Lit *tmp;
+-
+-  assert (assignment);
+-  assert (!solver->assignment_initialized);
+-
+-  for (p = assignment; (plit = *p); p++)
+-    {
+-      tmp = (plit < 0) ? QUANTOR_FALSE : QUANTOR_TRUE;
+-      pidx = (plit < 0) ? -plit : plit;
+-      assert (pidx <= solver->max_pidx);
+-      assert (solver->assignment.start[pidx] == QUANTOR_UNASSIGNED);
+-      solver->assignment.start[pidx] = tmp;
+-    }
+-
+-  solver->assignment_initialized = 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#endif
+-/*------------------------------------------------------------------------*/
+-
+-static Lit *
+-SatSolver_deref (SatSolver * solver, int lit)
+-{
+-  int pidx, plit;
+-  Lit *res;
+-#ifndef NDEBUG
+-  Var *v = int2var (solver->quantor, lit, 0, 0);
+-  assert (v->exported);
+-#endif
+-  if (!solver->assignment_initialized)
+-    solver->api->assignment (solver);
+-
+-  assert (lit > 0);
+-  plit = SatSolver_lit2plit (solver, lit);
+-  assert (plit > 0);
+-  pidx = plit;
+-  assert (pidx <= (int) solver->max_pidx);
+-  assert (pidx < (int) count_PtrStack (&solver->assignment));
+-  res = solver->assignment.start[pidx];
+-  assert (res != QUANTOR_UNASSIGNED);
+-#ifdef QUANTOR_LOG5
+-  LOG (solver->quantor, 5,
+-       "SAT SOLVER \"%s\" ASSIGNS LIT(%d)=PLIT(%d)=%s",
+-       solver->api->name, lit, plit, assignment2str (solver->quantor, res));
+-#endif
+-
+-  return res;
+-}
+-
+-/*------------------------------------------------------------------------*/
+ #ifdef QUANTOR_LOG1
+ /*------------------------------------------------------------------------*/
+ 
+@@ -11695,1081 +11494,125 @@
+ #endif
+ /*------------------------------------------------------------------------*/
+ 
+-static QuantorResult
+-SatSolver_run (SatSolver * solver)
+-{
+-  Quantor *quantor = solver->quantor;
+-  QuantorResult res;
+-
+-  INCSTATS2 (quantor->stats.sat_solver);
+-  res = quantor->sat_api->run (solver);
+-#ifdef QUANTOR_LOG1
+-  LOG (quantor, 1, "SAT SOLVER \"%s\" RETURNS %s",
+-       solver->api->name, res2str (res));
+-#endif
+-
+-  return res;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#ifdef QUANTOR_HAVE_FUNEX
+-/*------------------------------------------------------------------------*/
+-
+-#include "funex.h"
+-
+-/*------------------------------------------------------------------------*/
+-
+-typedef struct SatSolverFunEx SatSolverFunEx;
+-
+-struct SatSolverFunEx
 +static int
-+SatSolverIpasir_add(SatSolver *const  solver, int const  lit)
-+{
-+  SatSolverIpasir *const  this = (SatSolverIpasir*)solver;
-+  ipasir_add(this->impl, lit);
-+  return  1;
++AllClausesLitIt_done (LitIt * super, int *next_int_lit_ptr)
+ {
+-  SatSolver super;
+-  FunEx *funex;
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *SatSolverFunEx_get_api (void);
++  AllClausesLitIt *it;
++  int int_lit;
++  Lit *lit;
++  Cell *eor;
+ 
+-/*------------------------------------------------------------------------*/
++  it = (AllClausesLitIt *) super;
++  if (!it->current_clause)
++    return 1;
+ 
+-static SatSolver *
+-SatSolverFunEx_new (Quantor * quantor)
+-{
+-  double time_limit, time_sofar;
+-  SatSolverFunEx *this;
++  eor = end_of_row (it->current_clause);
+ 
+-  this = new (quantor, sizeof (*this));
+-  SatSolver_init (quantor, &this->super, SatSolverFunEx_get_api ());
+-  this->funex = funex_init ();
+-  if (quantor->opts.verbose)
++NEXT_CELL:
++  if (it->current_cell == eor)
+     {
+-      fprintf (quantor->io.out,
+-	       FUNEX_PREFIX "FunEx SAT Solver Version %s\n",
+-	       funex_version ());
+-      fprintf (quantor->io.out, FUNEX_PREFIX "%s\n", funex_id);
+-    }
+-
+-  funex_set_log_file (this->funex, quantor->io.out);
+-  funex_set_verbose (this->funex, quantor->opts.verbose);
+-  if (quantor->opts.verbose)
+-    funex_set_report_interval (this->funex, 1000);
+-
+-  if (quantor->opts.time_limit >= 0)
+-    {
+-      time_sofar = get_time () - quantor->stats.time;
+-      time_limit = quantor->opts.time_limit - time_sofar;
+-      time_limit = (time_limit < 0) ? 0 : time_limit;
+-      funex_set_time_limit (this->funex, time_limit);
+-#ifdef QUANTOR_LOG2
+-      LOG (quantor, 2, "SAT SOLVER TIME LIMIT %.1f seconds", time_limit);
+-#endif
++      lit = 0;
++      int_lit = 0;
++      if ((it->current_clause = it->current_clause->link.next))
++	it->current_cell = it->current_clause->row;
++    }
++  else
++    {
++      lit = it->current_cell->lit;
++      it->current_cell++;
++      if (it->existential_literals_only && !is_existential (lit->var))
++	goto NEXT_CELL;
++
++      int_lit = lit2int (it->quantor, lit);
++      assert (int_lit);
+     }
+ 
+-  /* TODO: space limit for funex */
++  assert (!lit || !is_assigned_var (lit->var));
++  *next_int_lit_ptr = int_lit;
+ 
+-  return &this->super;
++  return 0;
+ }
+ 
++
+ /*------------------------------------------------------------------------*/
+ 
+ static void
+-SatSolverFunEx_delete (SatSolver * solver)
++AllClausesLitIt_delete (LitIt * super)
+ {
+-  SatSolverFunEx *this = (SatSolverFunEx *) solver;
+-  Quantor *quantor = solver->quantor;
+-#ifdef QUANTOR_STATS1
+-  size_t bytes;
+-#endif
+-
+-  if (quantor->opts.verbose)
+-    fputs (funex_stats (this->funex), quantor->io.out);
+-
+-#ifdef QUANTOR_STATS1
+-  quantor->stats.sat_solver_time += funex_seconds (this->funex);
+-  bytes = funex_bytes (this->funex);
+-  if (bytes > quantor->stats.sat_solver_bytes)
+-    quantor->stats.sat_solver_bytes = bytes;
+-#endif
+-  funex_release (this->funex);
+-  SatSolver_release (solver);
+-  delete (quantor, this, sizeof (*this));
++  AllClausesLitIt *it = (AllClausesLitIt *) super;
++  delete (it->quantor, it, sizeof (*it));
+ }
+ 
+ /*------------------------------------------------------------------------*/
+ 
+-static int
+-SatSolverFunEx_add (SatSolver * solver, int lit)
+-{
+-  SatSolverFunEx *this = (SatSolverFunEx *) solver;
+-  funex_add_literal (this->funex, lit);
+-  return 1;
+-}
++static LitItAPI all_clauses_lit_it_api = {
++  AllClausesLitIt_done,
++  AllClausesLitIt_delete
++};
+ 
+ /*------------------------------------------------------------------------*/
+ 
+-static QuantorResult
+-SatSolverFunEx_run (SatSolver * solver)
++static LitIt *
++AllClausesLitIt_new (Quantor * quantor, int existential_literals_only)
+ {
+-  SatSolverFunEx *this = (SatSolverFunEx *) solver;
+-  QuantorResult res;
+-  int funex_res;
+-
+-  funex_res = funex_sat (this->funex);
++  AllClausesLitIt *this;
+ 
+-  switch (funex_res)
+-    {
+-    case FUNEX_SATISFIABLE:
+-      res = QUANTOR_RESULT_SATISFIABLE;
+-      break;
+-    case FUNEX_UNSATISFIABLE:
+-      res = QUANTOR_RESULT_UNSATISFIABLE;
+-      break;
+-    case FUNEX_TIMEOUT:
+-      res = QUANTOR_RESULT_TIMEOUT;
+-      break;
+-    case FUNEX_SPACEOUT:
+-      res = QUANTOR_RESULT_SPACEOUT;
+-      break;
+-    default:
+-      res = QUANTOR_RESULT_UNKNOWN;
+-      break;
+-    }
++  this = (AllClausesLitIt *) new (quantor, sizeof (*this));
++  this->super.api = &all_clauses_lit_it_api;
++  this->quantor = quantor;
++  this->existential_literals_only = existential_literals_only;
++  this->current_clause = quantor->clauses.first;
++  if (this->current_clause)
++    this->current_cell = this->current_clause->row;
+ 
+-  return res;
++  return &this->super;
+ }
+ 
+ /*------------------------------------------------------------------------*/
+ 
+-static void
+-SatSolverFunEx_assignment (SatSolver * solver)
++static int
++IntStackLitIt_done (LitIt * super, int *next_int_lit_ptr)
+ {
+-  SatSolverFunEx *this = (SatSolverFunEx *) solver;
+-  const int *assignment;
++  IntStackLitIt *it = (IntStackLitIt *) super;
++  int lit;
+ 
+-  assignment = funex_assignment (this->funex);
+-  assert (assignment);
+-  SatSolver_init_assignment (solver);
+-  SatSolver_set_assignment (solver, assignment);
+-}
++  if (it->current >= it->stack->top)
++    return 1;
+ 
+-/*------------------------------------------------------------------------*/
++  lit = *it->current++;
++  *next_int_lit_ptr = lit;
+ 
+-static SatSolverAPI funex_api = {
+-  "funex",
+-  SatSolverFunEx_new,
+-  SatSolverFunEx_delete,
+-  SatSolverFunEx_add,
+-  SatSolverFunEx_run,
+-  SatSolverFunEx_assignment
+-};
++  return 0;
 +}
+ 
+ /*------------------------------------------------------------------------*/
+ 
+-static SatSolverAPI *
+-SatSolverFunEx_get_api (void)
++static void
++IntStackLitIt_delete (LitIt * super)
+ {
+-  return &funex_api;
++  IntStackLitIt *it = (IntStackLitIt *) super;
++  delete (it->quantor, it, sizeof (*it));
+ }
+ 
+ /*------------------------------------------------------------------------*/
+-#endif
+-/*------------------------------------------------------------------------*/
+-#ifdef QUANTOR_HAVE_LIMMAT
+-/*------------------------------------------------------------------------*/
+-
+-#include "limmat.h"
+-
+-/*------------------------------------------------------------------------*/
+ 
+-typedef struct SatSolverLimmat SatSolverLimmat;
+-
+-struct SatSolverLimmat
+-{
+-  SatSolver super;
+-  Limmat *limmat;
+-  IntStack clause;
++static LitItAPI int_stack_lit_it_api = {
++  IntStackLitIt_done,
++  IntStackLitIt_delete
+ };
+ 
+ /*------------------------------------------------------------------------*/
+ 
+-static SatSolverAPI *SatSolverLimmat_get_api (void);
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolver *
+-SatSolverLimmat_new (Quantor * quantor)
++static LitIt *
++IntStackLitIt_new (Quantor * quantor, IntStack * stack)
+ {
+-  SatSolverLimmat *this;
+-
+-  this = new (quantor, sizeof (*this));
+-  SatSolver_init (quantor, &this->super, SatSolverLimmat_get_api ());
+-  this->limmat = new_Limmat (0);
+-  if (quantor->opts.verbose)
+-    {
+-      set_log_Limmat (this->limmat, quantor->io.out);
+-
+-      fprintf (quantor->io.out,
+-	       LIMMAT_PREFIX "Limmat SAT Solver Version %s\n",
+-	       version_Limmat ());
+-
+-      fprintf (quantor->io.out, LIMMAT_PREFIX "%s\n", id_Limmat ());
+-    }
++  IntStackLitIt *this;
+ 
+-  /* TODO: probably need to have a standard time out and space out limit */
+-
+-  return &this->super;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverLimmat_delete (SatSolver * solver)
+-{
+-  SatSolverLimmat *this = (SatSolverLimmat *) solver;
+-  Quantor *quantor = solver->quantor;
+-#ifdef QUANTOR_STATS1
+-  size_t bytes;
+-#endif
+-
+-  if (quantor->opts.verbose)
+-    stats_Limmat (this->limmat, quantor->io.out);
+-
+-#ifdef QUANTOR_STATS1
+-  quantor->stats.sat_solver_time += time_Limmat (this->limmat);
+-  bytes = bytes_Limmat (this->limmat);
+-  if (bytes > quantor->stats.sat_solver_bytes)
+-    quantor->stats.sat_solver_bytes = bytes;
+-#endif
+-  delete_Limmat (this->limmat);
+-  release_IntStack (quantor, &this->clause);
+-  SatSolver_release (solver);
+-  delete (quantor, this, sizeof (*this));
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-SatSolverLimmat_add (SatSolver * solver, int lit)
+-{
+-  SatSolverLimmat *this = (SatSolverLimmat *) solver;
+-
+-  push_IntStack (solver->quantor, &this->clause, lit);
+-
+-  if (!lit)
+-    {
+-      add_Limmat (this->limmat, this->clause.start);
+-      reset_IntStack (solver->quantor, &this->clause, 0);
+-    }
+-
+-  return 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static QuantorResult
+-SatSolverLimmat_run (SatSolver * solver)
+-{
+-  SatSolverLimmat *this = (SatSolverLimmat *) solver;
+-  QuantorResult res;
+-  int limmat_res;
+-
+-  limmat_res = sat_Limmat (this->limmat, -1);
+-
+-  if (limmat_res < 0)
+-    res = QUANTOR_RESULT_UNKNOWN;
+-  else if (limmat_res)
+-    res = QUANTOR_RESULT_SATISFIABLE;
+-  else
+-    res = QUANTOR_RESULT_UNSATISFIABLE;
+-
+-  return res;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverLimmat_assignment (SatSolver * solver)
+-{
+-  SatSolverLimmat *this = (SatSolverLimmat *) solver;
+-  const int *assignment;
+-
+-  assignment = assignment_Limmat (this->limmat);
+-  assert (assignment);
+-  SatSolver_init_assignment (solver);
+-  SatSolver_set_assignment (solver, assignment);
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI limmat_api = {
+-  "limmat",
+-  SatSolverLimmat_new,
+-  SatSolverLimmat_delete,
+-  SatSolverLimmat_add,
+-  SatSolverLimmat_run,
+-  SatSolverLimmat_assignment
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *
+-SatSolverLimmat_get_api (void)
+-{
+-  return &limmat_api;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#endif
+-/*------------------------------------------------------------------------*/
+-#ifdef QUANTOR_HAVE_NANOSAT
+-/*------------------------------------------------------------------------*/
+-
+-#include "nanosat.h"
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *SatSolverNanosat_get_api (void);
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolver *
+-SatSolverNanosat_new (Quantor * quantor)
+-{
+-  double time_limit, time_sofar;
+-  SatSolver *solver;
+-
+-  solver = new (quantor, sizeof (*solver));
+-  SatSolver_init (quantor, solver, SatSolverNanosat_get_api ());
+-  nanosat_init ();
+-
+-  if (quantor->opts.verbose)
+-    {
+-      fprintf (quantor->io.out,
+-	       NANOSAT_PREFIX "Nanosat SAT Solver Version %s\n",
+-	       nanosat_version ());
+-      fprintf (quantor->io.out, NANOSAT_PREFIX "%s\n", nanosat_id ());
+-    }
+-
+-  nanosat_set_output_file (quantor->io.out);
+-
+-  if (quantor->opts.time_limit >= 0)
+-    {
+-      time_sofar = get_time () - quantor->stats.time;
+-      time_limit = quantor->opts.time_limit - time_sofar;
+-      time_limit = (time_limit < 0) ? 0 : time_limit;
+-      nanosat_set_time_limit (time_limit);
+-#ifdef QUANTOR_LOG2
+-      LOG (quantor, 2, "SAT SOLVER TIME LIMIT %.1f seconds", time_limit);
+-#endif
+-    }
+-
+-  /* TODO: space limit for nanosat */
+-
+-  return solver;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverNanosat_delete (SatSolver * solver)
+-{
+-  Quantor *quantor = solver->quantor;
+-#ifdef QUANTOR_STATS1
+-  size_t bytes;
+-#endif
+-
+-  if (quantor->opts.verbose)
+-    nanosat_stats (quantor->io.out);
+-
+-#ifdef QUANTOR_STATS1
+-  quantor->stats.sat_solver_time += nanosat_seconds ();
+-  bytes = nanosat_bytes ();
+-  if (bytes > quantor->stats.sat_solver_bytes)
+-    quantor->stats.sat_solver_bytes = bytes;
+-#endif
+-
+-  nanosat_release ();
+-  SatSolver_release (solver);
+-  delete (quantor, solver, sizeof (*solver));
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-SatSolverNanosat_add (SatSolver * solver, int lit)
+-{
+-  (void) solver;
+-  return nanosat_add (lit);
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static QuantorResult
+-SatSolverNanosat_run (SatSolver * solver)
+-{
+-  QuantorResult res;
+-  int nanosat_res;
+-
+-  (void) solver;
+-  nanosat_res = nanosat_sat ();
+-
+-  switch (nanosat_res)
+-    {
+-    case NANOSAT_SATISFIABLE:
+-      res = QUANTOR_RESULT_SATISFIABLE;
+-      break;
+-    case NANOSAT_UNSATISFIABLE:
+-      res = QUANTOR_RESULT_UNSATISFIABLE;
+-      break;
+-    case NANOSAT_TIME_OUT:
+-      res = QUANTOR_RESULT_TIMEOUT;
+-      break;
+-    case NANOSAT_SPACE_OUT:
+-      res = QUANTOR_RESULT_SPACEOUT;
+-      break;
+-    default:
+-      res = QUANTOR_RESULT_UNKNOWN;
+-      break;
+-    }
+-
+-  return res;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverNanosat_assignment (SatSolver * solver)
+-{
+-  int pidx, tmp;
+-
+-  SatSolver_init_assignment (solver);
+-
+-  assert (!solver->assignment_initialized);
+-  for (pidx = 1; pidx <= solver->max_pidx; pidx++)
+-    {
+-      assert (solver->assignment.start[pidx] == QUANTOR_UNASSIGNED);
+-      tmp = nanosat_deref (pidx);
+-      solver->assignment.start[pidx] = tmp ? QUANTOR_TRUE : QUANTOR_FALSE;
+-    }
+-  solver->assignment_initialized = 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI nanosat_api = {
+-  "nanosat",
+-  SatSolverNanosat_new,
+-  SatSolverNanosat_delete,
+-  SatSolverNanosat_add,
+-  SatSolverNanosat_run,
+-  SatSolverNanosat_assignment
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *
+-SatSolverNanosat_get_api (void)
+-{
+-  return &nanosat_api;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#endif
+-/*------------------------------------------------------------------------*/
+-#ifdef QUANTOR_HAVE_PICOSAT
+-/*------------------------------------------------------------------------*/
+-
+-#include "picosat.h"
+-
+-/*------------------------------------------------------------------------*/
+-
+-typedef struct SatSolverPicosat SatSolverPicosat;
+-
+-struct SatSolverPicosat
+-{
+-  SatSolver super;
+-  PicoSAT *picosat;
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *SatSolverPicosat_get_api (void);
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolver *
+-SatSolverPicosat_new (Quantor * quantor)
+-{
+-  SatSolverPicosat *this;
+-
+-  this = new (quantor, sizeof (*this));
+-  SatSolver_init (quantor, &this->super, SatSolverPicosat_get_api ());
+-
+-  if (quantor->opts.verbose >= 2)
+-    fprintf (quantor->io.out, "c PicoSAT Version %s\n", picosat_version ());
+-
+-  this->picosat = picosat_init ();
+-
+-  picosat_set_output (this->picosat, quantor->io.out);
+-  if (quantor->opts.verbose >= 2)
+-    picosat_set_verbosity (this->picosat, 1);
+-
+-  /* TODO: time limit for picosat */
+-
+-  /* TODO: space limit for picosat */
+-
+-  return &this->super;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverPicosat_delete (SatSolver * solver)
+-{
+-  Quantor *quantor = solver->quantor;
+-  SatSolverPicosat * this = (SatSolverPicosat*) solver;
+-#ifdef QUANTOR_STATS1
+-  size_t bytes;
+-#endif
+-  if (quantor->opts.verbose)
+-    picosat_stats (this->picosat);
+-
+-#ifdef QUANTOR_STATS1
+-  quantor->stats.sat_solver_time += picosat_seconds (this->picosat);
+-
+-  bytes = picosat_max_bytes_allocated (this->picosat);
+-  if (bytes > quantor->stats.sat_solver_bytes)
+-    quantor->stats.sat_solver_bytes = bytes;
+-#endif
+-  picosat_reset (this->picosat);
+-  SatSolver_release (solver);
+-  delete (quantor, this, sizeof (*this));
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-SatSolverPicosat_add (SatSolver * solver, int lit)
+-{
+-  SatSolverPicosat * this = (SatSolverPicosat*) solver;
+-  picosat_add (this->picosat, lit);
+-  return 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static QuantorResult
+-SatSolverPicosat_run (SatSolver * solver)
+-{
+-  SatSolverPicosat * this = (SatSolverPicosat*) solver;
+-  QuantorResult res;
+-  int picosat_res;
+-
+-  (void) solver;
+-  picosat_res = picosat_sat (this->picosat, -1);
+-
+-  switch (picosat_res)
+-    {
+-    case PICOSAT_SATISFIABLE:
+-      res = QUANTOR_RESULT_SATISFIABLE;
+-      break;
+-    case PICOSAT_UNSATISFIABLE:
+-      res = QUANTOR_RESULT_UNSATISFIABLE;
+-      break;
+-    default:
+-      res = QUANTOR_RESULT_UNKNOWN;
+-      break;
+-    }
+-
+-  return res;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverPicosat_assignment (SatSolver * solver)
+-{
+-  SatSolverPicosat * this = (SatSolverPicosat*) solver;
+-  int pidx, tmp;
+-
+-  SatSolver_init_assignment (solver);
+-
+-  assert (!solver->assignment_initialized);
+-  for (pidx = 1; pidx <= solver->max_pidx; pidx++)
+-    {
+-      assert (solver->assignment.start[pidx] == QUANTOR_UNASSIGNED);
+-      tmp = picosat_deref (this->picosat, pidx);
+-      solver->assignment.start[pidx] = tmp > 0 ? QUANTOR_TRUE : QUANTOR_FALSE;
+-    }
+-  solver->assignment_initialized = 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI picosat_api = {
+-  "picosat",
+-  SatSolverPicosat_new,
+-  SatSolverPicosat_delete,
+-  SatSolverPicosat_add,
+-  SatSolverPicosat_run,
+-  SatSolverPicosat_assignment
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *
+-SatSolverPicosat_get_api (void)
+-{
+-  return &picosat_api;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#endif
+-/*------------------------------------------------------------------------*/
+-#ifdef QUANTOR_HAVE_BOOLEFORCE
+-/*------------------------------------------------------------------------*/
+-
+-#include "booleforce.h"
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *SatSolverBooleforce_get_api (void);
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolver *
+-SatSolverBooleforce_new (Quantor * quantor)
+-{
+-  double time_limit, time_sofar;
+-  SatSolver *solver;
+-
+-  solver = new (quantor, sizeof (*solver));
+-  SatSolver_init (quantor, solver, SatSolverBooleforce_get_api ());
+-
+-  booleforce_init ();
+-  booleforce_set_output (quantor->io.out, quantor->io.out_name);
+-  booleforce_set_verbose (quantor->opts.verbose >= 2 ?
+-                          2 : quantor->opts.verbose);
+-
+-  if (quantor->opts.time_limit >= 0)
+-    {
+-      time_sofar = get_time () - quantor->stats.time;
+-      time_limit = quantor->opts.time_limit - time_sofar;
+-      time_limit = (time_limit < 0) ? 0 : time_limit;
+-      booleforce_set_time_limit (time_limit);
+-#ifdef QUANTOR_LOG2
+-      LOG (quantor, 2, "SAT SOLVER TIME LIMIT %.1f seconds", time_limit);
+-#endif
+-    }
+-
+-  if (quantor->opts.verbose)
+-    booleforce_options ();
+-
+-  /* TODO: space limit for booleforce */
+-
+-  return solver;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverBooleforce_delete (SatSolver * solver)
+-{
+-  Quantor *quantor = solver->quantor;
+-#ifdef QUANTOR_STATS1
+-  size_t bytes;
+-#endif
+-
+-  if (quantor->opts.verbose)
+-    booleforce_stats (quantor->io.out);
+-
+-#ifdef QUANTOR_STATS1
+-  quantor->stats.sat_solver_time += booleforce_seconds ();
+-  bytes = booleforce_max_bytes ();
+-  if (bytes > quantor->stats.sat_solver_bytes)
+-    quantor->stats.sat_solver_bytes = bytes;
+-#endif
+-
+-  booleforce_reset ();
+-  SatSolver_release (solver);
+-  delete (quantor, solver, sizeof (*solver));
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-SatSolverBooleforce_add (SatSolver * solver, int lit)
+-{
+-  (void) solver;
+-  booleforce_add (lit);
+-  return 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static QuantorResult
+-SatSolverBooleforce_run (SatSolver * solver)
+-{
+-  QuantorResult res;
+-  int booleforce_res;
+-
+-  (void) solver;
+-  booleforce_res = booleforce_sat ();
+-
+-  switch (booleforce_res)
+-    {
+-    case BOOLEFORCE_SATISFIABLE:
+-      res = QUANTOR_RESULT_SATISFIABLE;
+-      break;
+-    case BOOLEFORCE_UNSATISFIABLE:
+-      res = QUANTOR_RESULT_UNSATISFIABLE;
+-      break;
+-    default:
+-      res = QUANTOR_RESULT_UNKNOWN;
+-      break;
+-    }
+-
+-  return res;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverBooleforce_assignment (SatSolver * solver)
+-{
+-  int pidx, tmp;
+-
+-  SatSolver_init_assignment (solver);
+-
+-  assert (!solver->assignment_initialized);
+-  for (pidx = 1; pidx <= solver->max_pidx; pidx++)
+-    {
+-      assert (solver->assignment.start[pidx] == QUANTOR_UNASSIGNED);
+-      tmp = booleforce_deref (pidx);
+-      solver->assignment.start[pidx] = tmp > 0 ? QUANTOR_TRUE : QUANTOR_FALSE;
+-    }
+-  solver->assignment_initialized = 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI booleforce_api = {
+-  "booleforce",
+-  SatSolverBooleforce_new,
+-  SatSolverBooleforce_delete,
+-  SatSolverBooleforce_add,
+-  SatSolverBooleforce_run,
+-  SatSolverBooleforce_assignment
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *
+-SatSolverBooleforce_get_api (void)
+-{
+-  return &booleforce_api;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#endif
+-/*------------------------------------------------------------------------*/
+-#ifdef QUANTOR_HAVE_COMPSAT
+-/*------------------------------------------------------------------------*/
+-
+-#include "compsat.h"
+-
+-/*------------------------------------------------------------------------*/
+-
+-typedef struct SatSolverCompsat SatSolverCompsat;
+-
+-struct SatSolverCompsat
+-{
+-  SatSolver super;
+-  CompSat * compsat;
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-
+-static SatSolverAPI * SatSolverCompsat_get_api (void);
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolver *
+-SatSolverCompsat_new (Quantor * quantor)
+-{
+-  SatSolverCompsat * this;
+-
+-  this = new (quantor, sizeof (*this));
+-  SatSolver_init (quantor, &this->super, SatSolverCompsat_get_api());
+-  this->compsat = compsat_new ();
+-  compsat_set_log_file (this->compsat, quantor->io.out);
+-  compsat_set_out_file (this->compsat, quantor->io.out);
+-  if (quantor->opts.verbose)
+-    {
+-      compsat_set_verbose_level (this->compsat, 1);
+-
+-      fprintf (quantor->io.out,
+-	       "%sCompSat SAT Solver Version %s\n",
+-	       compsat_prefix (this->compsat), compsat_version ());
+-
+-      fprintf (quantor->io.out, "%s%s\n",
+-	       compsat_prefix(this->compsat), compsat_id ());
+-    }
+-
+-  /* TODO: time limit for compsat */
+-  /* TODO: space limit for compsat */
+-
+-  return &this->super;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverCompsat_delete (SatSolver * solver)
+-{
+-  SatSolverCompsat * this = (SatSolverCompsat *) solver;
+-  Quantor * quantor = solver->quantor;
+-#ifdef QUANTOR_STATS1
+-  size_t bytes;
+-#endif
+-
+-  if (quantor->opts.verbose)
+-    compsat_stats (this->compsat, quantor->io.out);
+-
+-#ifdef QUANTOR_STATS1
+-  quantor->stats.sat_solver_time += compsat_seconds (this->compsat);
+-  bytes = compsat_bytes (this->compsat);
+-  if (bytes > quantor->stats.sat_solver_bytes)
+-    quantor->stats.sat_solver_bytes = bytes;
+-#endif
+-  compsat_delete (this->compsat);
+-  SatSolver_release (solver);
+-  delete (quantor, this, sizeof (*this));
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-SatSolverCompsat_add (SatSolver * solver, int lit)
+-{
+-  SatSolverCompsat * this = (SatSolverCompsat*) solver;
+-  compsat_add_literal (this->compsat, lit);
+-
+-  return 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static QuantorResult
+-SatSolverCompsat_run (SatSolver * solver)
+-{
+-  SatSolverCompsat * this = (SatSolverCompsat*) solver;
+-  QuantorResult res;
+-  int compsat_res;
+-
+-  compsat_res = compsat_sat (this->compsat);
+-
+-  if (compsat_res == COMPSAT_SATISFIABLE)
+-    res = QUANTOR_RESULT_SATISFIABLE;
+-  else if (compsat_res == COMPSAT_UNSATISFIABLE)
+-    res = QUANTOR_RESULT_UNSATISFIABLE;
+-  else if (compsat_res == COMPSAT_TIME_OUT)
+-    res = QUANTOR_RESULT_TIMEOUT;
+-  else if (compsat_res == COMPSAT_SPACE_OUT)
+-    res = QUANTOR_RESULT_SPACEOUT;
+-  else
+-    res = QUANTOR_RESULT_UNKNOWN;
+-
+-  return res;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-SatSolverCompsat_assignment (SatSolver * solver)
+-{
+-  SatSolverCompsat * this = (SatSolverCompsat*) solver;
+-  int pidx, tmp;
+-
+-  SatSolver_init_assignment (solver);
+-  assert (!solver->assignment_initialized);
+-  for (pidx = 1; pidx <= solver->max_pidx; pidx++)
+-    {
+-      assert (solver->assignment.start[pidx] == QUANTOR_UNASSIGNED);
+-      tmp = compsat_deref (this->compsat, pidx);
+-      solver->assignment.start[pidx] = tmp ? QUANTOR_TRUE : QUANTOR_FALSE;
+-    }
+-  solver->assignment_initialized = 1;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI compsat_api = {
+-  "compsat",
+-  SatSolverCompsat_new,
+-  SatSolverCompsat_delete,
+-  SatSolverCompsat_add,
+-  SatSolverCompsat_run,
+-  SatSolverCompsat_assignment
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *
+-SatSolverCompsat_get_api (void)
+-{
+-  return &compsat_api;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#endif
+-/*------------------------------------------------------------------------*/
+-
+-static SatSolverAPI *sat_apis[] = {
+-#ifdef QUANTOR_HAVE_PICOSAT
+-  &picosat_api,
+-#endif
+-#ifdef QUANTOR_HAVE_BOOLEFORCE
+-  &booleforce_api,
+-#endif
+-#ifdef QUANTOR_HAVE_COMPSAT
+-  &compsat_api,
+-#endif
+-#ifdef QUANTOR_HAVE_NANOSAT
+-  &nanosat_api,
+-#endif
+-#ifdef QUANTOR_HAVE_FUNEX
+-  &funex_api,
+-#endif
+-#ifdef QUANTOR_HAVE_LIMMAT
+-  &limmat_api,
+-#endif
+-  0				/* sentinel */
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-AllClausesLitIt_done (LitIt * super, int *next_int_lit_ptr)
+-{
+-  AllClausesLitIt *it;
+-  int int_lit;
+-  Lit *lit;
+-  Cell *eor;
+-
+-  it = (AllClausesLitIt *) super;
+-  if (!it->current_clause)
+-    return 1;
+-
+-  eor = end_of_row (it->current_clause);
+-
+-NEXT_CELL:
+-  if (it->current_cell == eor)
+-    {
+-      lit = 0;
+-      int_lit = 0;
+-      if ((it->current_clause = it->current_clause->link.next))
+-	it->current_cell = it->current_clause->row;
+-    }
+-  else
+-    {
+-      lit = it->current_cell->lit;
+-      it->current_cell++;
+-      if (it->existential_literals_only && !is_existential (lit->var))
+-	goto NEXT_CELL;
+-
+-      int_lit = lit2int (it->quantor, lit);
+-      assert (int_lit);
+-    }
+-
+-  assert (!lit || !is_assigned_var (lit->var));
+-  *next_int_lit_ptr = int_lit;
+-
+-  return 0;
+-}
+-
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-AllClausesLitIt_delete (LitIt * super)
+-{
+-  AllClausesLitIt *it = (AllClausesLitIt *) super;
+-  delete (it->quantor, it, sizeof (*it));
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static LitItAPI all_clauses_lit_it_api = {
+-  AllClausesLitIt_done,
+-  AllClausesLitIt_delete
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static LitIt *
+-AllClausesLitIt_new (Quantor * quantor, int existential_literals_only)
+-{
+-  AllClausesLitIt *this;
+-
+-  this = (AllClausesLitIt *) new (quantor, sizeof (*this));
+-  this->super.api = &all_clauses_lit_it_api;
+-  this->quantor = quantor;
+-  this->existential_literals_only = existential_literals_only;
+-  this->current_clause = quantor->clauses.first;
+-  if (this->current_clause)
+-    this->current_cell = this->current_clause->row;
+-
+-  return &this->super;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static int
+-IntStackLitIt_done (LitIt * super, int *next_int_lit_ptr)
+-{
+-  IntStackLitIt *it = (IntStackLitIt *) super;
+-  int lit;
+-
+-  if (it->current >= it->stack->top)
+-    return 1;
+-
+-  lit = *it->current++;
+-  *next_int_lit_ptr = lit;
+-
+-  return 0;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static void
+-IntStackLitIt_delete (LitIt * super)
+-{
+-  IntStackLitIt *it = (IntStackLitIt *) super;
+-  delete (it->quantor, it, sizeof (*it));
+-}
+-
+-/*------------------------------------------------------------------------*/
+-
+-static LitItAPI int_stack_lit_it_api = {
+-  IntStackLitIt_done,
+-  IntStackLitIt_delete
+-};
+-
+-/*------------------------------------------------------------------------*/
+-
+-static LitIt *
+-IntStackLitIt_new (Quantor * quantor, IntStack * stack)
+-{
+-  IntStackLitIt *this;
+-
+-  this = (IntStackLitIt *) new (quantor, sizeof (*this));
+-  this->super.api = &int_stack_lit_it_api;
+-  this->quantor = quantor;
+-  this->stack = stack;
+-  this->current = stack->start;
++  this = (IntStackLitIt *) new (quantor, sizeof (*this));
++  this->super.api = &int_stack_lit_it_api;
++  this->quantor = quantor;
++  this->stack = stack;
++  this->current = stack->start;
+ 
+   return &this->super;
+ }
+@@ -12877,74 +11720,226 @@
+ 
+ /*------------------------------------------------------------------------*/
+ 
++typedef struct {
++  Quantor *quantor;
++  void    *impl;
++
++  int max_pidx;
++  int assignment_initialized;
++
++  IntStack idx2pidx;
++  PtrStack assignment;
++
++} SatState;
 +
 +/*------------------------------------------------------------------------*/
 +
-+static QuantorResult
-+SatSolverIpasir_run(SatSolver *const  solver)
-+{
-+  SatSolverIpasir *const  this = (SatSolverIpasir*)solver;
++static inline void
++SatSolver_init(SatState *const  state, Quantor *const  quantor) {
++  memset(state, 0, sizeof(*state));
++  state->quantor = quantor;
++  state->impl    = ipasir_init();
++}
 +
-+  switch(ipasir_solve(this->impl)) {
++static inline void
++SatSolver_destroy(SatState *const  state) {
++  Quantor *const  quantor = state->quantor;
++  ipasir_release(state->impl);
++  release_IntStack(quantor, &state->idx2pidx);
++  release_PtrStack(quantor, &state->assignment);
++}
++
++static inline QuantorResult
++SatSolver_solve(SatState *const  state) {
++  switch(ipasir_solve(state->impl)) {
 +  case 10:  return  QUANTOR_RESULT_SATISFIABLE;
 +  case 20:  return  QUANTOR_RESULT_UNSATISFIABLE;
 +  default:  return  QUANTOR_RESULT_UNKNOWN;
 +  }
 +}
 +
++static int
++SatSolver_lit2plit(SatState *const  state, int  lit) {
++  int sign, plit, idx, pidx, *p;
++
++  if(lit < 0) { sign = -1; idx = -lit; }
++  else        { sign =  1; idx =  lit; }
++
++  p = access_IntStack(state->quantor, &state->idx2pidx, idx);
++  if (!*p)
++    {
++      pidx = ++state->max_pidx;
++      *p = pidx;
++#ifdef QUANTOR_LOG5
++      LOG (state->quantor, 5,
++	   "MAPPING IDX=%d TO PIDX=%d FOR SAT SOLVER", idx, pidx);
++#endif
++    }
++
++  pidx = *p;
++  plit = pidx * sign;
++
++  return plit;
++}
++
++/*------------------------------------------------------------------------*/
++
+ static void
+-propagate_sat_solver_assignment (Quantor * quantor, SatSolver * solver)
+-{
++SatSolver_copy(SatState *const  state, LitIt *it) {
++  void  *const  impl = state->impl;
++  double const  time = get_time();
++
++  int  count_clauses  = 0;
++  int  count_literals = 0;
++  int  lit;
++  while(!it->api->done(it, &lit)) {
++    int  plit;
++#ifndef NDEBUG
++    int pidx;
++#endif
++
++    if(lit) {
++      plit = SatSolver_lit2plit(state, lit);
++      count_literals++;
++    }
++    else {
++      plit = 0;
++      count_clauses++;
++    }
++#ifndef NDEBUG
++    pidx = (plit < 0)? -plit : plit;
++    assert(0 <= pidx);
++    assert(pidx <= state->max_pidx);
++#endif
++    ipasir_add(impl, plit);
++  }
++
++  if(state->quantor->opts.verbose) {
++    double  delta = get_time() - time;
++    delta = delta < 0? 0 : delta;
++#ifdef QUANTOR_LOG1
++    LOG(state->quantor, 1, "COPIED %d CLAUSES", count_clauses);
++    LOG(state->quantor, 1, "  %d LITERALS", count_literals);
++    LOG(state->quantor, 1, "  %d MAX VARIABLE INDEX", state->max_pidx);
++    LOG(state->quantor, 1, "IN %.2f SECONDS", delta);
++#endif
++  }
++}
++
++/*------------------------------------------------------------------------*/
++
++static Lit*
++SatSolver_deref(SatState *const  state, int  lit) {
++  Quantor *const  quantor = state->quantor;
++  int pidx, plit;
++  Lit *res;
++#ifndef NDEBUG
++  Var *v = int2var(quantor, lit, 0, 0);
++  assert(v->exported);
++#endif
++
++  if(!state->assignment_initialized) {
++    /* We need to start at the invalid index 'pidx == 0'. */
++    for(pidx = 0; pidx <= state->max_pidx; pidx++)
++      push_PtrStack(quantor, &state->assignment, QUANTOR_UNASSIGNED);
++
++    for(pidx = 1; pidx <= state->max_pidx; pidx++) {
++      assert(state->assignment.start[pidx] == QUANTOR_UNASSIGNED);
++      state->assignment.start[pidx] = ipasir_val(state->impl, pidx) > 0? QUANTOR_TRUE : QUANTOR_FALSE;
++    }
++    state->assignment_initialized = 1;
++  }
++
++  assert(lit > 0);
++  plit = SatSolver_lit2plit(state, lit);
++  assert(plit > 0);
++  pidx = plit;
++  assert(pidx <= (int)state->max_pidx);
++  assert(pidx < (int)count_PtrStack(&state->assignment));
++  res = state->assignment.start[pidx];
++  assert(res != QUANTOR_UNASSIGNED);
++#ifdef QUANTOR_LOG5
++  LOG(quantor, 5,
++      "SAT SOLVER \"%s\" ASSIGNS LIT(%d)=PLIT(%d)=%s",
++      ipasir_signature(), lit, plit, assignment2str(quantor, res));
++#endif
++
++  return res;
++}
++
 +/*------------------------------------------------------------------------*/
 +
 +static void
-+SatSolverIpasir_assignment(SatSolver *const  solver)
-+{
-+  SatSolverIpasir *const  this = (SatSolverIpasir*)solver;
-+
-+  int pidx;
-+
-+  SatSolver_init_assignment (solver);
-+  assert(!solver->assignment_initialized);
-+  for(pidx = 1; pidx <= solver->max_pidx; pidx++)
-+    {
-+      assert(solver->assignment.start[pidx] == QUANTOR_UNASSIGNED);
-+      solver->assignment.start[pidx] = ipasir_val(this->impl, pidx) > 0? QUANTOR_TRUE : QUANTOR_FALSE;
-+    }
-+  solver->assignment_initialized = 1;
-+}
-+
-+/*------------------------------------------------------------------------*/
-+
-+static SatSolverAPI ipasir_api = {
-+  "ipasir",
-+  SatSolverIpasir_new,
-+  SatSolverIpasir_delete,
-+  SatSolverIpasir_add,
-+  SatSolverIpasir_run,
-+  SatSolverIpasir_assignment
-+};
-+
-+
-+static SatSolverAPI *SatSolverIpasir_get_api() {
-+  return &ipasir_api;
-+}
-+
-+/*------------------------------------------------------------------------*/
-+#endif /* QUANTOR_HAVE_IPASIR */
-+/*------------------------------------------------------------------------*/
-+
-+
-+/*------------------------------------------------------------------------*/
- #ifdef QUANTOR_HAVE_FUNEX
- /*------------------------------------------------------------------------*/
++propagate_sat_solver_assignment(Quantor *const  quantor, SatState *const  state) {
+   int i, propagated;
+   Lit *tmp;
+-  Var *v;
  
-@@ -12628,6 +12738,9 @@
- /*------------------------------------------------------------------------*/
- 
- static SatSolverAPI *sat_apis[] = {
-+#ifdef QUANTOR_HAVE_IPASIR
-+  &ipasir_api,
-+#endif
- #ifdef QUANTOR_HAVE_PICOSAT
-   &picosat_api,
+ #ifdef QUANTOR_LOG1
+   LOG (quantor, 1, "PROPAGATING ASSIGNMENTS FROM SAT SOLVER");
  #endif
+   propagated = 0;
+ 
+-  for (i = 1; i <= quantor->max_idx; i++)
+-    {
+-      v = quantor->vars.start[i];
+-      if (!v || !v->exported || v->eliminated || v->zombie)
+-	continue;
++  for(i = 1; i <= quantor->max_idx; i++) {
++    Var *const  v = quantor->vars.start[i];
++    if(!v || !v->exported || v->eliminated || v->zombie)
++      continue;
+ 
+-      tmp = deref (quantor, var2lit (v, 0));
+-      if (is_constant (tmp))
+-	continue;
++    tmp = deref (quantor, var2lit (v, 0));
++    if(is_constant (tmp))
++      continue;
+ 
+-      assert (tmp != QUANTOR_UNASSIGNED);
++    assert(tmp != QUANTOR_UNASSIGNED);
+ 
+-      tmp = SatSolver_deref (solver, v->idx);
+-      assign (quantor, v, tmp);
++    tmp = SatSolver_deref(state, v->idx);
++    assign(quantor, v, tmp);
+ 
+-      propagated++;
+-    }
++    propagated++;
++  }
+ #ifdef QUANTOR_LOG1
+-  LOG (quantor, 1, "PROPAGATED %d ASSIGNMENTS FROM SAT SOLVER", propagated);
++  LOG(quantor, 1, "PROPAGATED %d ASSIGNMENTS FROM SAT SOLVER", propagated);
+ #endif
+ }
+ 
+ /*------------------------------------------------------------------------*/
+ 
+ static QuantorResult
+-sat (Quantor * quantor)
+-{
+-  SatSolver *solver;
+-  QuantorResult res;
++sat(Quantor *const  quantor) {
++  SatState       state;
++  QuantorResult  res;
++
+   LitIt *it;
+-  int ok;
+ 
+-  assert (quantor->sat_api);
++  /* Create Solver Instance */
+ #ifdef QUANTOR_LOG1
+-  LOG (quantor, 1, "CALLING EXTERNAL SAT SOLVER ON REMAINING CLAUSES");
++  LOG(quantor, 1, "CALLING EXTERNAL SAT SOLVER ON REMAINING CLAUSES");
+ #endif
+-  solver = quantor->sat_api->new (quantor);
+-  it = AllClausesLitIt_new (quantor, 0);
+-  ok = SatSolver_copy (solver, it);
+-  it->api->delete (it);
+ 
+-  if (ok)
+-    res = SatSolver_run (solver);
+-  else
+-    res = QUANTOR_RESULT_UNKNOWN;
++  SatSolver_init(&state, quantor);
+ 
+-  if (res == QUANTOR_RESULT_SATISFIABLE)
+-    {
+-      propagate_sat_solver_assignment (quantor, solver);
+-      assign_not_eliminated_zombies (quantor);
+-    }
++  if(quantor->opts.verbose >= 2)
++    fprintf(quantor->io.out, "c SAT Solver: %s\n", ipasir_signature());
++
++  it = AllClausesLitIt_new(quantor, 0);
++  SatSolver_copy(&state, it);
++  it->api->delete(it);
++
++  /* Run the Solver */
++  INCSTATS2(quantor->stats.sat_solver);
++  res = SatSolver_solve(&state);
++#ifdef QUANTOR_LOG1
++  LOG(quantor, 1, "SAT SOLVER \"%s\" RETURNS %s",
++      ipasir_signature(), res2str(res));
++#endif
++
++  if(res == QUANTOR_RESULT_SATISFIABLE) {
++    propagate_sat_solver_assignment(quantor, &state);
++    assign_not_eliminated_zombies(quantor);
++  }
+ 
+-  quantor->sat_api->delete (solver);
++  SatSolver_destroy(&state);
+ 
+ #ifdef QUANTOR_STATS2
+-  assert (!quantor->stats.sat_remaining_time);
++  assert(!quantor->stats.sat_remaining_time);
+   quantor->stats.sat_remaining_time = quantor->stats.sat_solver_time;
+ #endif
+ 
+@@ -12954,62 +11949,57 @@
+ /*------------------------------------------------------------------------*/
+ 
+ static QuantorResult
+-trivial_truth (Quantor * quantor)
+-{
+-  SatSolver *solver;
+-  QuantorResult res;
++trivial_truth (Quantor *const  quantor) {
++  SatState       state;
++  QuantorResult  res;
++
+ #ifdef QUANTOR_STATS2
+   double time;
+ #endif
+   LitIt *it;
+-  int ok;
+ 
+-  if (!quantor->opts.trivial_truth)
+-    return QUANTOR_RESULT_UNKNOWN;
++  if(!quantor->opts.trivial_truth)  return  QUANTOR_RESULT_UNKNOWN;
+ 
+-  INCSTATS2 (quantor->stats.trivial_truth);
+-  assert (quantor->sat_api);
++  INCSTATS2(quantor->stats.trivial_truth);
++  assert(quantor->ipasir);
+ #ifdef QUANTOR_STATS2
+   time = quantor->stats.sat_solver_time;
+ #endif
+ #ifdef QUANTOR_LOG2
+-  LOG (quantor, 2, "CALLING SAT SOLVER FOR TRIVIAL TRUTH");
++  LOG(quantor, 2, "CALLING SAT SOLVER FOR TRIVIAL TRUTH");
+ #endif
+-  solver = quantor->sat_api->new (quantor);
+-  it = AllClausesLitIt_new (quantor, 1);
+-  ok = SatSolver_copy (solver, it);
+-  it->api->delete (it);
+-  if (ok)
+-    res = SatSolver_run (solver);
+-  else
+-    res = QUANTOR_RESULT_UNKNOWN;
++  SatSolver_init(&state, quantor);
++  it = AllClausesLitIt_new(quantor, 1);
++  SatSolver_copy(&state, it);
++  it->api->delete(it);
+ 
+-  if (res == QUANTOR_RESULT_SATISFIABLE)
+-    {
++  /* Run the Solver */
++  res = SatSolver_solve(&state);
++
++  if(res == QUANTOR_RESULT_SATISFIABLE) {
+ #ifdef QUANTOR_LOG1
+-      LOG (quantor, 1, "DETECTED TRIVIAL TRUTH");
++    LOG(quantor, 1, "DETECTED TRIVIAL TRUTH");
+ #endif
+-      propagate_sat_solver_assignment (quantor, solver);
+-      assign_not_eliminated_zombies (quantor);
+-    }
+-  else
+-    {
++    propagate_sat_solver_assignment(quantor, &state);
++    assign_not_eliminated_zombies(quantor);
++  }
++  else {
+ #ifdef QUANTOR_LOG1
+-      LOG (quantor, 1, "TRIVIAL TRUTH CHECK FAILED");
++    LOG(quantor, 1, "TRIVIAL TRUTH CHECK FAILED");
+ #endif
+-      res = QUANTOR_RESULT_UNKNOWN;
+-    }
++    res = QUANTOR_RESULT_UNKNOWN;
++  }
+ 
+-  quantor->sat_api->delete (solver);
++  SatSolver_destroy(&state);
+ 
+ #ifdef QUANTOR_STATS2
+   quantor->stats.sat_trivial_truth_time +=
+     quantor->stats.sat_solver_time - time;
+ #endif
+ 
+-  assert (res == QUANTOR_RESULT_UNKNOWN || res == QUANTOR_RESULT_SATISFIABLE);
++  assert(res == QUANTOR_RESULT_UNKNOWN || res == QUANTOR_RESULT_SATISFIABLE);
+ 
+-  return res;
++  return  res;
+ }
+ 
+ /*------------------------------------------------------------------------*/
+@@ -13027,65 +12017,61 @@
+ /*------------------------------------------------------------------------*/
+ 
+ static QuantorResult
+-lift_assignment_to_original_clauses (Quantor * quantor)
+-{
+-  SatSolver *solver;
+-  QuantorResult res;
++lift_assignment_to_original_clauses (Quantor *const  quantor) {
++  SatState       state;
++  QuantorResult  res;
++
+ #ifdef QUANTOR_STATS2
+   double time;
+ #endif
+   LitIt *it;
+-  int i, ok;
++  int i;
+   Lit *tmp;
+   Var *v;
+ 
+-  assert (quantor->sat_api);
++  assert(quantor->ipasir);
+ #ifdef QUANTOR_STATS2
+   time = quantor->stats.sat_solver_time;
+ #endif
+ #ifdef QUANTOR_LOG1
+-  LOG (quantor, 1, "CALLING EXTERNAL SAT SOLVER ON ORIGINAL CLAUSES");
++  LOG(quantor, 1, "CALLING EXTERNAL SAT SOLVER ON ORIGINAL CLAUSES");
+ #endif
+-  solver = quantor->sat_api->new (quantor);
+-  it = IntStackLitIt_new (quantor, &quantor->dead_original_clauses);
+-  ok = SatSolver_copy (solver, it);
+-  it->api->delete (it);
+-  it = AssignedLitIt_new (quantor);
+-  SatSolver_copy (solver, it);
+-  it->api->delete (it);
+-
+-  if (ok)
+-    {
+-      res = SatSolver_run (solver);
+-      assert (res != QUANTOR_RESULT_UNSATISFIABLE);
+-      if (res == QUANTOR_RESULT_SATISFIABLE)
+-	{
+-	  for (i = 1; i <= quantor->max_idx; i++)
+-	    {
+-	      v = quantor->vars.start[i];
+-	      if (!v)
+-		continue;
+ 
+-	      assert (v->exported);
+-	      tmp = deref (quantor, v->lits);
+-	      if (is_constant (tmp))
+-		continue;
++  SatSolver_init(&state, quantor);
+ 
+-	      tmp = SatSolver_deref (solver, v->idx);
+-	      assign (quantor, v, tmp);
+-	    }
+-	}
++  it = IntStackLitIt_new(quantor, &quantor->dead_original_clauses);
++  SatSolver_copy(&state, it);
++  it->api->delete(it);
++  it = AssignedLitIt_new(quantor);
++  SatSolver_copy(&state, it);
++  it->api->delete(it);
++
++  /* Run the Solver */
++  res = SatSolver_solve(&state);
++
++  assert(res != QUANTOR_RESULT_UNSATISFIABLE);
++  if(res == QUANTOR_RESULT_SATISFIABLE) {
++    for(i = 1; i <= quantor->max_idx; i++) {
++      v = quantor->vars.start[i];
++      if(!v)  continue;
++
++      assert(v->exported);
++      tmp = deref(quantor, v->lits);
++      if(is_constant(tmp))  continue;
++
++      tmp = SatSolver_deref(&state, v->idx);
++      assign(quantor, v, tmp);
+     }
+-  else
+-    res = QUANTOR_RESULT_UNKNOWN;
++  }
++
++  SatSolver_destroy(&state);
+ 
+-  solver->api->delete (solver);
+ #ifdef QUANTOR_STATS2
+-  assert (!quantor->stats.sat_original_time);
++  assert(!quantor->stats.sat_original_time);
+   quantor->stats.sat_original_time = quantor->stats.sat_solver_time - time;
+ #endif
+ 
+-  return res;
++  return  res;
+ }
+ 
+ /*------------------------------------------------------------------------*/
+@@ -13289,36 +12275,10 @@
+   return *q ? ((const char *) 0) : p;
+ }
+ 
+-/*------------------------------------------------------------------------*/
+-#if defined(QUANTOR_LOG2) && defined(QUANTOR_STATS1)
+-/*------------------------------------------------------------------------*/
+-
+-static const char *
+-get_sat_solver_name (Quantor * quantor)
+-{
+-  const char *res;
+-
+-  res = "<none>";
+-
+-  if (quantor->sat_api)
+-    res = quantor->sat_api->name;
+-
+-  assert (res);
+-
+-  return res;
+-}
+-
+-/*------------------------------------------------------------------------*/
+-#endif
+-/*------------------------------------------------------------------------*/
+-
+ static void
+ init_opts (Quantor * quantor)
+ {
+ #include "options.c"
+-
+-  if (!quantor->sat_api && sat_apis[0]->name)
+-    quantor->sat_api = sat_apis[0];
+ }
+ 
+ /*------------------------------------------------------------------------*/
+@@ -13902,7 +12862,7 @@
+ #ifdef QUANTOR_STATS1
+ #ifdef QUANTOR_LOG2
+   LOG (quantor, 2, "  ELIMINATION=%.2f", delta - stats->sat_solver_time);
+-  LOG (quantor, 2, "  SATSOLVER=%s", get_sat_solver_name (quantor));
++  LOG (quantor, 2, "  SATSOLVER=%s", ipasir_signature());
+ #ifdef QUANTOR_STATS2
+   LOG (quantor, 2, "    CALLS=%d SAT=%.2f LIFT=%.2f",
+        stats->sat_solver, stats->sat_solver_time, stats->sat_original_time);
+@@ -14153,16 +13113,10 @@
+ static QuantorResult
+ quantor_sat_after_simplification (Quantor * quantor, QuantorResult res)
+ {
+-  if (res == QUANTOR_RESULT_UNKNOWN && !quantor->sat_api)
+-    {
+-      report (quantor, "(no sat solver available)");
+-    }
+-  else
+-    {
+-      if (res == QUANTOR_RESULT_UNKNOWN && is_propositional (quantor))
++  if (res == QUANTOR_RESULT_UNKNOWN && is_propositional (quantor))
+ 	res = sat (quantor);
+ 
+-      if (res == QUANTOR_RESULT_SATISFIABLE &&
++  if (res == QUANTOR_RESULT_SATISFIABLE &&
+ 	  quantor->stats.num_unassigned_exported > 0 &&
+ 	  quantor->save_dead_original_clauses)
+ 	{
+@@ -14172,8 +13126,6 @@
+ 	    report (quantor, "(failed to lift assignment)");
+ 	}
+ 
+-    }
+-
+   return res;
+ }
+ 
+@@ -14264,7 +13216,6 @@
+   int pretty_print_only, dump_sat, quit_after_simplification;
+   int do_not_print_assignment, stats_printed;
+   int i, err, done, fast_exit;
+-  SatSolverAPI **sat_api_ptr;
+   const char *err_str;
+   QuantorResult res;
+   Quantor *quantor;
+@@ -14278,7 +13229,7 @@
+   quit_after_simplification = 0;
+   fast_exit = 0;
+ 
+-  quantor = new_Quantor ();
++  quantor = new_Quantor();
+ 
+   /* 0. Phase: register environment variables and '--undocumented' command
+    * line options defined in 'options.sh'.
+@@ -14432,29 +13383,15 @@
+ 	{
+ 	  fast_exit = 1;
+ 	}
+-      else if (!strcmp (argv[i], "--list-sat-solvers"))
++      else if (!strcmp (argv[i], "--list-sat-solver"))
+ 	{
+-	  for (sat_api_ptr = sat_apis; *sat_api_ptr; sat_api_ptr++)
+-	    fprintf (quantor->io.out, "%s\n", (*sat_api_ptr)->name);
++	  fprintf(quantor->io.out, "%s\n", ipasir_signature());
+ 	  done = 1;
+ 	}
+       else if (argv[i][0] == '-' && argv[i][1] == 'D')
+ 	{
+ 	  /* skip, since it has been handled above */
+ 	}
+-      else if (argv[i][0] == '-' && argv[i][1] == '-')
+-	{
+-	  for (sat_api_ptr = sat_apis; *sat_api_ptr; sat_api_ptr++)
+-	    {
+-	      if (!strcmp ((*sat_api_ptr)->name, argv[i] + 2))
+-		break;
+-	    }
+-
+-	  if (!*sat_api_ptr)
+-	    goto INVALID_OPTION;
+-
+-	  quantor->sat_api = *sat_api_ptr;
+-	}
+       else if (!strcmp (argv[i], "-o"))
+ 	{
+ 	  if (i + 1 >= argc)
+@@ -14481,7 +13418,6 @@
+ 	}
+       else if (argv[i][0] == '-')
+ 	{
+-	INVALID_OPTION:
+ 	  fprintf (quantor->io.out,
+ 		   "*** quantor: invalid option '%s' (try '-h')\n", argv[i]);
+ 	  err = 1;
+@@ -14654,6 +13590,14 @@
+ }
+ 
+ /*------------------------------------------------------------------------*/
++
++const char *
++quantor_backend (void)
++{
++  return  ipasir_signature();
++}
++
++/*------------------------------------------------------------------------*/
+ 
+ QuantorResult
+ quantor_sat (Quantor * quantor)
+diff -ruN quantor-3.2/quantor.h quantor3.2_ipasir/quantor.h
+--- quantor-3.2/quantor.h	2014-10-26 10:40:21.000000000 +0100
++++ quantor3.2_ipasir/quantor.h	2016-04-05 22:33:15.771284832 +0200
+@@ -72,6 +72,7 @@
+ const char *quantor_id (void);
+ const char *quantor_copyright (void);
+ const char *quantor_version (void);
++const char *quantor_backend (void);
+ 
+ /*------------------------------------------------------------------------*/
+ 
+diff -ruN quantor-3.2/VERSION quantor3.2_ipasir/VERSION
+--- quantor-3.2/VERSION	2014-10-26 10:40:21.000000000 +0100
++++ quantor3.2_ipasir/VERSION	2016-04-05 23:08:22.078523290 +0200
+@@ -1 +1 @@
+-3.2
++3.2 (IPASIR patch)

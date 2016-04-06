@@ -4,19 +4,17 @@ CC       := g++
 
 OBJECTS  := qdlsolve.o QdlParser.o
 LIB_DIR  := ../../lib
-LIBS     := $(patsubst %,$(LIB_DIR)/lib%.a, quantor satsolver)
+LIBS     := $(LIB_DIR)/libquantor.a $(LIB_DIR)/libipasir_dummy.so
 
 .PHONY: all clean clobber
 
 all: qdlsolve
 
-qdlsolve: LDLIBS += -lpthread
+qdlsolve: LDLIBS += -Wl,-rpath,'$$ORIGIN/../lib,-rpath-link,$(LIB_DIR)'
 qdlsolve: $(OBJECTS) ../model/libqbm.a $(LIBS)
 
 QdlParser.cpp QdlParser.hpp: QdlParser.ypp
 	wisent $<
-
-$(OBJECTS): $(LIBS)
 
 ../model/libqbm.a $(LIBS):
 	$(MAKE) -C $(dir $@) $(notdir $@)

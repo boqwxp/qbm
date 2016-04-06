@@ -1,6 +1,7 @@
 *.o
 lib*.a
 lib*.so*
+*.tar.gz
 quantor-3.2/
 picosat-965/
 riss_505/
