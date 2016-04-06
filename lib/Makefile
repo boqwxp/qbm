@@ -3,26 +3,31 @@ CC      := gcc
 QUANTOR := quantor-3.2
 
 # Available SAT Solvers
-PICOSAT := picosat-965
-IPASIR  := riss_505
+PICOSAT := picosat-965/libipasir_picosat.so
+RISS    := riss_505/libipasirriss_505.so riss_505/libcoprocessor.so.3
 
 # Choose one of them
 SATSOLVER := picosat
-SATSOLVER_DIR := $($(shell echo $(SATSOLVER) | tr '[a-z]' '[A-Z]'))
 
-.PHONY: all clean clobber
+# Derived Values
+SATSOLVER_LIB := $($(shell echo $(SATSOLVER) | tr '[a-z]' '[A-Z]'))
+SUBDIRS       := $(QUANTOR) $(dir $(firstword $(PICOSAT))) $(dir $(firstword $(RISS)))
 
-all: libquantor.a libsatsolver.a
+.PHONY: all clean clobber clean_local
+
+all: libquantor.a libipasir_dummy.so libipasir.so
+
+.PRECIOUS: %.tar.gz
 
 #############################################################################
 # Quantor
 libquantor.a: $(QUANTOR)/libquantor.a
 	ln -sf $< .
 
-%/libquantor.a: %.tar.gz $(SATSOLVER_DIR)/lib$(SATSOLVER).a
+%/libquantor.a: %.tar.gz
 	tar xzf $< && cd $* && \
 	patch -p1 < ../quantor-3.2_ipasir.patch && \
-	./configure --$(SATSOLVER)=../$(SATSOLVER_DIR) && $(MAKE) $(notdir $@)
+	./configure && $(MAKE) $(notdir $@)
 
 quantor-%.tar.gz:
 	wget http://fmv.jku.at/quantor/$@
@@ -30,25 +35,32 @@ quantor-%.tar.gz:
 #############################################################################
 # SAT Solvers
 
-libsatsolver.a: $(SATSOLVER_DIR)/lib$(SATSOLVER).a
-	ln -sf $< $@
+libipasir_dummy.so: ipasir/libipasir_dummy.so
+	ln -sf $< .
+
+libipasir.so: $(SATSOLVER_LIB)
+	for i in $^; do ln -sf $$i .; done; rm -f $@; ln -s $< $@
 
 # PicoSat
-%/libpicosat.a: %.tar.gz
-	tar xzf $< && cd $* && ./configure.sh && $(MAKE)
+%/libipasir_picosat.so: %.tar.gz
+	tar xzf $< && cd $* && \
+	patch -p1 < ../picosat-965_ipasir.patch && \
+	./configure.sh -shared && $(MAKE) $(notdir $@)
 
 picosat-%.tar.gz:
 	wget http://fmv.jku.at/picosat/$@
 
-# IPASIR: Riss
-%/libipasir.a: $(IPASIR).tar.gz
-	tar xzf $< && cd $* && $(MAKE) && ln -sf libipasir$(IPASIR).a libipasir.a
+# Riss
+%/libipasirriss_505.so: %.tar.gz
+	tar xzf $< && cd $* && \
+	$(MAKE) shared
 
 #############################################################################
-clean:
-	$(MAKE) -C $(QUANTOR) clean; \
-	$(MAKE) -C $(PICOSAT) clean; \
-	rm -rf lib*.a
+clean: clean_local
+	for i in $(SUBDIRS); do if [ -d $$i ]; then $(MAKE) -C $$i clean; fi; done
 
-clobber: clean
-	rm -rf $(PICOSAT) $(IPASIR) $(QUANTOR)
+clobber: clean_local
+	rm -rf $(SUBDIRS)
+
+clean_local:
+	rm -rf lib*.a lib*.so*

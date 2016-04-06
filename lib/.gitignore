@@ -1,4 +1,6 @@
+*.o
 lib*.a
+lib*.so*
 quantor-3.2/
 picosat-965/
 riss_505/
