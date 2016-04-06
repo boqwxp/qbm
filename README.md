@@ -35,13 +35,13 @@ end;
 * src/model/ - the circuit representation
 * src/qdl/   - the QDL frontend supporting a command-line work flow
 * models/    - example QDL models
+* bin/       - directory created when building binaries
 
 ## Quick Start
 ```bash
 > git clone https://github.com/preusser/qbm.git
-> cd qbm/src/qdl
 > make
-> ./qdlsolve < test.qdl
+> bin/qdlsolve < models/test.qdl
 Compiling <top> ...
 Compiling lut_s0 ...
 Compiling lut_s1 ...
@@ -57,6 +57,6 @@ SAT
         c = "1110110010000000";
 ```
 In essence, the
-[provided example](https://github.com/preusser/qbm/blob/master/src/qdl/test.qdl)
+[provided example](https://github.com/preusser/qbm/blob/master/models/test.qdl)
 computes the truth tables for the individual
 output bits of an adder for two 2-bit operands.
