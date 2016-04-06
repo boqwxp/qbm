@@ -10,8 +10,10 @@ LIBS     := $(LIB_DIR)/libquantor.a $(LIB_DIR)/libipasir_dummy.so
 
 all: qdlsolve
 
-qdlsolve: LDLIBS += -Wl,-rpath,'$$ORIGIN/../lib,-rpath-link,$(LIB_DIR)'
+qdlsolve: LDLIBS += -Wl,-rpath,'$$ORIGIN/../lib'
 qdlsolve: $(OBJECTS) ../model/libqbm.a $(LIBS)
+
+$(OBJECTS): $(LIBS)
 
 QdlParser.cpp QdlParser.hpp: QdlParser.ypp
 	wisent $<

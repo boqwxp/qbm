@@ -6,11 +6,11 @@ QUANTOR := quantor-3.2
 
 # Available SAT Solvers
 PICOSAT := picosat-965/libipasir_picosat.so
-RISS    := riss_505/libipasirriss_505.so riss_505/libcoprocessor.so.3
+RISS    := riss_505/libipasirriss_505.so
 
 # Derived Values
 SATSOLVER_LIB := $($(shell echo $(SATSOLVER) | tr '[a-z]' '[A-Z]'))
-SUBDIRS       := $(QUANTOR) $(dir $(firstword $(PICOSAT))) $(dir $(firstword $(RISS)))
+SUBDIRS       := $(QUANTOR) $(dir $(PICOSAT)) $(dir $(RISS))
 
 .PHONY: all clean clobber clean_local
 

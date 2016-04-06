@@ -13,7 +13,7 @@ clean:
 ## Binary Targets ###########################################################
 # Create bin/ Directory
 $(BIN_TARGETS): bin
-bin:
+bin: lib/libipasir.so
 	mkdir -p $@
 
 # Generic Target Rules
@@ -29,3 +29,6 @@ bin/qdlsolve: src/qdl/qdlsolve
 ## Libaries #################################################################
 libs:
 	$(MAKE) -C lib/
+
+lib/lib%.so: FORCE
+	$(MAKE) -C lib/ $(notdir $@)
