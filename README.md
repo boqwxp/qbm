@@ -42,6 +42,7 @@ Note that this tool uses external QBF and SAT solvers. These are downloaded in t
 ## Quick Start
 ```bash
 > git clone https://github.com/preusser/qbm.git
+> cd qbm
 > make
 > bin/qdlsolve < models/test.qdl
 Compiling <top> ...
@@ -49,10 +50,13 @@ Compiling lut_s0 ...
 Compiling lut_s1 ...
 Compiling lut_s2 ...
 Compiling fct ...
+
+Solving ... using Quantor_3.2 (IPASIR patch) / PicoSAT_953
 SAT
+        CHOOSE<2>/0 = "001";
 /fct:ADD
 /lut_s0:LUT
-        c = "0101101001011010";
+        c = "0110";
 /lut_s1:LUT
         c = "1001001101101100";
 /lut_s2:LUT
@@ -60,5 +64,5 @@ SAT
 ```
 In essence, the
 [provided example](https://github.com/preusser/qbm/blob/master/models/test.qdl)
-computes the truth tables for the individual
+computes the truth tables for computing the individual
 output bits of an adder for two 2-bit operands.
