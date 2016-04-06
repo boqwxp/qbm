@@ -31,11 +31,13 @@ end;
 ```
 
 ## Code Structure
-* lib/       - the place where Quantor and PicoSat are downloaded and compiled
+* lib/       - the place where Quantor and PicoSAT are downloaded and compiled
 * src/model/ - the circuit representation
 * src/qdl/   - the QDL frontend supporting a command-line work flow
 * models/    - example QDL models
 * bin/       - directory created when building binaries
+
+Note that this tool uses external QBF and SAT solvers. These are downloaded in the course of the build process. The default configuration uses PicoSAT and Quantor both by **Armin Biere, Johannes Kepler University, Linz, Austria**. Both these tools are patched so that PicoSAT can be plugged in as a dynamically linked [IPASIR](http://baldur.iti.kit.edu/sat-race-2015/index.php?cat=rules#api) implementation. This allows for an easy substition by any other dynamically linked IPASIR-compliant SAT solver.
 
 ## Quick Start
 ```bash
