@@ -51,6 +51,9 @@ public:
   char const* version()   const {
     return  quantor_version();
   }
+  char const* backend()   const {
+    return  quantor_backend();
+  }
 
   //- Problem Construction
 public:

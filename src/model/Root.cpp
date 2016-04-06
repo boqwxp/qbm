@@ -125,6 +125,7 @@ Result Root::solve() {
   };
 
   qbm::Quantor  q;
+  std::cout << "using Quantor_" << q.version() << " / " << q.backend() << std::endl;
 
   q.scope(QUANTOR_EXISTENTIAL_VARIABLE_TYPE);
   for(int  i = FIRST_CONFIG; i < m_confignxt; i++)  q.add(i);
