@@ -2,26 +2,36 @@ CXXFLAGS := -std=gnu++11 -Wall -O3 -I../../lib/quantor-3.2
 CXX	 := g++
 CC	 := g++
 
-OBJECTS  := Component.o CompDecl.o Statement.o PortDecl.o WireDecl.o Expression.o ParamDecl.o Lib.o Root.o Context.o Result.o
-LIB_DIR  := ../../lib
-LIBS     := $(LIB_DIR)/libquantor.a $(LIB_DIR)/libipasir_dummy.so
+LIBDIR   := ../../lib
+LIBS     := $(LIBDIR)/libquantor.a $(LIBDIR)/libipasir_dummy.so
+LDFLAGS  := -L$(LIBDIR) -Wl,-rpath,'$$ORIGIN/../../lib'
 
-.PHONY: default all clean clobber
+OBJECTS  := Component.o CompDecl.o Statement.o PortDecl.o WireDecl.o \
+	    Expression.o ParamDecl.o Lib.o Root.o Context.o Result.o
 
+.PHONY: default all clean clobber FORCE
+
+## Standard Targets ##########################################################
 default: libqbm.a
 all: default test
-
-libqbm.a: $(OBJECTS)
-	$(AR) rcs $@ $^
-
-$(OBJECTS): $(LIBS)
-
-test: test.o libqbm.a $(LIBS)
-
-$(LIBS):
-	$(MAKE) -C $(dir $@) $(notdir $@)
 
 clean:
 	rm -rf *~ lib*.a *.o test
 
 clobber: clean
+
+## Actual Outputs ############################################################
+libqbm.a: $(OBJECTS)
+	$(AR) rcs $@ $^
+
+$(OBJECTS) test.o: $(LIBS)
+
+test: LDLIBS := -L. -lqbm -lquantor -lipasir_dummy
+test: test.o
+
+## Dependencies ##############################################################
+
+# Force Visit of External Libraries
+$(OBJECTS): $(LIBS)
+$(LIBS): FORCE
+	$(MAKE) -C $(dir $@) $(notdir $@)

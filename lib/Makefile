@@ -5,17 +5,30 @@ CC      := gcc
 QUANTOR := quantor-3.2
 
 # Available SAT Solvers
-PICOSAT := picosat-965/libipasir_picosat.so
-RISS    := riss_505/libipasirriss_505.so
+PICOSAT     := picosat-965
+PICOSATLIBS := $(PICOSAT)/libipasir_picosat.so
+RISS        := riss_505
+RISSLIBS    := $(RISS)/libipasir$(RISS).so $(RISS)/libcoprocessor.so.3
 
 # Derived Values
-SATSOLVER_LIB := $($(shell echo $(SATSOLVER) | tr '[a-z]' '[A-Z]'))
-SUBDIRS       := $(QUANTOR) $(dir $(PICOSAT)) $(dir $(RISS))
+SATSOLVERLIBS := $($(shell echo $(SATSOLVER) | tr '[a-z]' '[A-Z]')LIBS)
+SUBDIRS       := $(QUANTOR) $(dir $(firstword $(PICOSATLIBS)) $(firstword $(RISSLIBS)))
 
 .PHONY: all clean clobber clean_local
 
+## Standard Targets #########################################################
 all: libquantor.a libipasir_dummy.so libipasir.so
 
+clean: clean_local
+	for i in $(SUBDIRS); do if [ -d $$i ]; then $(MAKE) -C $$i clean; fi; done
+
+clobber: clean_local
+	rm -rf $(SUBDIRS)
+
+clean_local:
+	rm -rf lib*.a lib*.so*
+
+# Make sure downloaded archives stay around
 .SECONDARY:
 
 #############################################################################
@@ -42,7 +55,7 @@ libipasir_dummy.so: $(QUANTOR)/libipasir_dummy.so
 
 # Always relink as the selected SATSOLVER might have changed
 .PHONY: libipasir.so
-libipasir.so: $(SATSOLVER_LIB)
+libipasir.so: $(SATSOLVERLIBS)
 	for i in $^; do ln -sf $$i .; done; rm -f $@; ln -s $< $@
 
 # PicoSat
@@ -58,16 +71,7 @@ picosat-%.tar.gz:
 	wget http://fmv.jku.at/picosat/$@
 
 # Riss
-%/libipasirriss_505.so: %.tar.gz
-	tar xzf $< && cd $* && \
-	$(MAKE) shared
+$(RISS)/lib%: $(RISS)/$(RISS);
 
-#############################################################################
-clean: clean_local
-	for i in $(SUBDIRS); do if [ -d $$i ]; then $(MAKE) -C $$i clean; fi; done
-
-clobber: clean_local
-	rm -rf $(SUBDIRS)
-
-clean_local:
-	rm -rf lib*.a lib*.so*
+%/$(RISS): %.tar.gz
+	tar xzf $< && cd $* && make shared && touch $*
