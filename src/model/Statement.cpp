@@ -22,6 +22,8 @@
 #include "CompDecl.hpp"
 #include "Context.hpp"
 
+#include <sstream>
+
 ConstDecl::~ConstDecl() {}
 void ConstDecl::dump(std::ostream &out) const {
   out << "constant " << name() << " = " << expr();
@@ -95,7 +97,7 @@ void Instantiation::execute(Context &ctx) const {
       connects[m_decl.getPort(i).name()] = ctx.computeBus(*m_connects[i]);
     }
   }
-  ctx.addComponent(*this, params, connects);
+  Context(ctx.root(), ctx.createChildScope(m_label + '/'), params, connects).compile(m_label, m_decl);
 }
 
 Generate::~Generate() {}
@@ -105,7 +107,9 @@ void Generate::execute(Context &ctx) const {
 
   std::string const& var = m_var;
   for(int  i = lo; i <= hi; i++) {
-    Context  local(ctx);
+    std::stringstream  name;
+    name << i << '.';
+    Context  local(ctx, ctx.createChildScope(name.str()));
     local.defineConstant(var, i);
     for(std::shared_ptr<Statement const> const& stmt : m_body) {
       stmt->execute(local);

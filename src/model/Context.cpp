@@ -311,7 +311,7 @@ void Context::defineConstant(std::string const &name, int val) {
 int Context::resolveConstant(std::string const &name) const {
   auto const  it = m_constants.find(name);
   if(it != m_constants.end())  return  it->second;
-  throw  m_comp.type().name() + ": " + name + " is not defined.";
+  throw  m_scope.name() + ": Constant " + name + " is not defined.";
 }
 int Context::computeConstant(Expression const &expr) const {
   Computer  comp(*this);
@@ -321,7 +321,7 @@ int Context::computeConstant(Expression const &expr) const {
 
 void Context::registerConfig(std::string const &name, Bus const &bus) {
   registerSignal(name, bus);
-  m_comp.addConfig(name, bus);
+  m_scope.addConfig(name, bus);
 }
 void Context::registerSignal(std::string const &name, Bus const &bus) {
   if(!m_busses.emplace(name, bus).second) {

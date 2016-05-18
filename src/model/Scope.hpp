@@ -17,50 +17,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#ifndef COMPONENT_HPP
-#define COMPONENT_HPP
+#ifndef SCOPE_HPP
+#define SCOPE_HPP
 
 #include "Bus.hpp"
-#include "Statement.hpp"
 
 #include <string>
-#include <ostream>
 #include <map>
 
-class Root;
-class Instantiation;
-class CompDecl;
-class Context;
-
-class Component {
-  Root                &m_root;
-  Instantiation const &m_inst;
-
-  std::map<std::string, Bus>        m_configs;
-  std::map<std::string, Component>  m_components;
-  
-public:
-  Component(Root &root, Instantiation const &inst);
-  Component(Root &root, Instantiation const &inst,
-	    std::map<std::string, int> &params,
-	    std::map<std::string, Bus> &connects);
-  ~Component() {}
+class Scope {
+  std::string const             m_name;
+  std::map<std::string, Bus>    m_configs;
+  std::map<std::string, Scope>  m_children;
 
 public:
-  std::string const& label() const { return  m_inst.label(); }
-  CompDecl    const& type()  const { return  m_inst.decl(); }
+  Scope(std::string const &name) : m_name(name) {}
+  ~Scope();
 
-private:
-  void compile(Context &ctx);
+public:
+  std::string const& name() const { return  m_name; }
 
 public:
   void addConfig(std::string const &name, Bus const &bus) {
     m_configs.emplace(name, bus);
   }
-  void addComponent(std::string          const &name,
-		    Instantiation        const &decl,
-		    std::map<std::string, int> &params,
-		    std::map<std::string, Bus> &connects);
+  Scope &createChild(std::string const &name);
 
 public:
   class Visitor {
@@ -68,8 +49,8 @@ public:
     Visitor() {}
     ~Visitor() {}
   public:
-    virtual void visitConfig(std::string const &name, std::string const &bits) = 0;
-    virtual void visitChild(std::string const &name, Component const &child) = 0;
+    virtual void visitConfig(std::string const &name, Bus const &bus) = 0;
+    virtual void visitChild(std::string const &name, Scope const &child) = 0;
   };
   void accept(Visitor &v) const;
 };

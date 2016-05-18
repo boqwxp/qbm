@@ -17,54 +17,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#ifndef ROOT_HPP
-#define ROOT_HPP
-
-#include "Bus.hpp"
-#include "Result.hpp"
 #include "Scope.hpp"
 
-#include <vector>
+Scope::~Scope() {}
 
-class CompDecl;
-class Root {
-public:
-  static int const  FIRST_CONFIG =          2;
-  static int const  FIRST_INPUT  = 0x3FFF0000;
-  static int const  FIRST_SIGNAL = 0x40000000;
+Scope &Scope::createChild(std::string const &name) {
+  auto  res = m_children.emplace(std::piecewise_construct,
+				 std::forward_as_tuple(name),
+				 std::forward_as_tuple(name));
+  if(!res.second)  throw name + " already defined.";
+  return  res.first->second;
+}
 
-private:
-  Scope  m_top;
-
-  std::vector<int>  m_clauses;
-  int  m_confignxt;
-  int  m_inputnxt;
-  int  m_signalnxt;
-
-  Result  m_res;
-
-public:
-  Root(CompDecl const &decl);
-  ~Root() {}
-
-public:
-  Bus allocateConfig(unsigned  width);
-  Bus allocateInput (unsigned  width);
-  Bus allocateSignal(unsigned  width);
-
-public:
-  void print(std::ostream &out, Bus const &bus) const;
-  void addClause(int const *beg, int const *end);
-  void dumpClauses(std::ostream &out) const;
-
-public:
-  Result solve();
-  bool resolve(int const  v) const {
-    for(int  i : m_clauses) {
-      if(abs(i) == v)  return  i > 0;
-    }
-    return  false;
+void Scope::accept(Visitor &v) const {
+  for(auto const &e : m_configs) {
+    v.visitConfig(e.first, e.second);
   }
-  void printConfig(std::ostream &out) const;
-};
-#endif
+
+  for(auto const &e : m_children) {
+    v.visitChild(e.first, e.second);
+  }
+}

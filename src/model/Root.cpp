@@ -18,10 +18,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "Root.hpp"
+#include "Context.hpp"
 
 #include "Quantor.hpp"
 
-#include <ostream>
+#include <iostream>
+#include <sstream>
+
+Root::Root(CompDecl const &decl)
+  : m_top(""),
+    m_confignxt(FIRST_CONFIG),
+    m_inputnxt (FIRST_INPUT),
+    m_signalnxt(FIRST_SIGNAL) {
+
+  Context  ctx(*this, m_top);
+  decl.forAllPorts([this, &ctx](PortDecl const &decl) {
+      int const  width = ctx.computeConstant(decl.width());
+      ctx.registerSignal(decl.name(), decl.direction() == PortDecl::Direction::in? allocateInput(width) : allocateSignal(width));
+    });
+  ctx.compile("<top>", decl);
+}
 
 Bus Root::allocateConfig(unsigned  width) {
   Node *const  nodes = new Node[width];
@@ -155,25 +171,27 @@ Result Root::solve() {
 }
 
 void Root::printConfig(std::ostream &out) const {
-  class Printer : public Component::Visitor {
+  class Printer : public Scope::Visitor {
+    Root const   &m_root;
     std::ostream &m_out;
     std::string   m_path;
 
   public:
-    Printer(std::ostream &out) : m_out(out) {}
+    Printer(Root const &root, std::ostream &out) : m_root(root), m_out(out) {}
     ~Printer() {}
 
   public:
-    void visitConfig(std::string const &name, std::string const &bits) {
-      m_out << '\t' << name << " = \"" << bits << "\";" << std::endl;
+    void visitConfig(std::string const &name, Bus const &bus) {
+      std::stringstream  s;
+      for(unsigned  i = bus.width(); i-- > 0; s << m_root.resolve(bus[i]));
+      m_out << m_path << name << " = \"" << s.str() << "\";" << std::endl;
     }
-    void visitChild(std::string const &name, Component const &child) {
+    void visitChild(std::string const &name, Scope const &child) {
       std::string const  prev = m_path;
-      m_path += '/' + name + ':' + child.type().name();
-      m_out << m_path << std::endl;
+      m_path += child.name();
       child.accept(*this);
       m_path = prev;
     }
-  } prn(out);
-  top().accept(prn);
+  } prn(*this, out);
+  m_top.accept(prn);
 }

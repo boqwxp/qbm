@@ -22,39 +22,34 @@
 
 #include "Bus.hpp"
 #include "Root.hpp"
+#include "CompDecl.hpp"
+#include "Statement.hpp"
 
 #include <map>
-#include <sstream>
 
-class Component;
+class Expression;
 
 class Context {
-  Root      &m_root;
-  Component &m_comp;
+  Root  &m_root;
+  Scope &m_scope;
 
   std::map<std::string, int>  m_constants;
   std::map<std::string, Bus>  m_busses;
 
-  std::string  m_prefix;
   unsigned     m_subcnt;
 
 public:
-  Context(Root &root, Component &comp) : m_root(root), m_comp(comp), m_subcnt(0) {}
-  Context(Root &root, Component &comp,
+  Context(Root &root, Scope &scope) : m_root(root), m_scope(scope), m_subcnt(0) {}
+  Context(Root &root, Scope &scope,
 	  std::map<std::string, int> &constants,
 	  std::map<std::string, Bus> &busses)
-    : m_root(root), m_comp(comp), m_subcnt(0) {
+    : m_root(root), m_scope(scope), m_subcnt(0) {
     std::swap(m_constants, constants);
     std::swap(m_busses,    busses);
   }
-  Context(Context &parent)
-    : m_root(parent.m_root), m_comp(parent.m_comp),
-      m_constants(parent.m_constants), m_busses(parent.m_busses),
-      m_subcnt(0) {
-    std::stringstream  s;
-    s << parent.m_prefix << parent.m_subcnt++ << '.';
-    m_prefix = s.str();
-  }
+  Context(Context const &parent, Scope &scope)
+    : m_root(parent.m_root), m_scope(scope),
+      m_constants(parent.m_constants), m_busses(parent.m_busses), m_subcnt(0) {}
   ~Context() {}
 
 public:
@@ -81,10 +76,12 @@ public:
   }
 
 public:
-  void addComponent(Instantiation        const &decl,
-		    std::map<std::string, int> &params,
-		    std::map<std::string, Bus> &connects) {
-    m_comp.addComponent(m_prefix+decl.label(), decl, params, connects);
+  void compile(std::string const &name, CompDecl const &comp) {
+    std::cout << "Compiling " << name << " : " << comp.name() << " ..." << std::endl;
+    comp.forAllStatements([this](Statement const &stmt) { stmt.execute(*this); });
+  }
+  Scope& createChildScope(std::string const &name) {
+    return  m_scope.createChild(name);
   }
 
 public:

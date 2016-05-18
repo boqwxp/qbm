@@ -6,8 +6,8 @@ LIBDIR   := ../../lib
 LIBS     := $(LIBDIR)/libquantor.a $(LIBDIR)/libipasir_dummy.so
 LDFLAGS  := -L$(LIBDIR) -Wl,-rpath,'$$ORIGIN/../../lib'
 
-OBJECTS  := Component.o CompDecl.o Statement.o PortDecl.o WireDecl.o \
-	    Expression.o ParamDecl.o Lib.o Root.o Context.o Result.o
+OBJECTS  := CompDecl.o Statement.o PortDecl.o WireDecl.o \
+	    Expression.o ParamDecl.o Lib.o Root.o Context.o Result.o Scope.o
 
 .PHONY: default all clean clobber FORCE
 
