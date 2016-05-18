@@ -56,14 +56,14 @@ void Component::compile(Context &ctx) {
     });
 }
 
-void Component::addComponent(Instantiation        const &inst,
+void Component::addComponent(std::string          const &name,
+			     Instantiation        const &inst,
 			     std::map<std::string, int> &params,
 			     std::map<std::string, Bus> &connects) {
-  std::string const &label = inst.label();
   auto const  res = m_components.emplace(std::piecewise_construct,
-					 std::forward_as_tuple(label),
+					 std::forward_as_tuple(name),
 					 std::forward_as_tuple(m_root, inst, params,connects));
-  if(!res.second)  throw "Label " + label + " already defined.";
+  if(!res.second)  throw "Label " + name + " already defined.";
 }
 
 void Component::accept(Visitor &v) const {
@@ -77,6 +77,6 @@ void Component::accept(Visitor &v) const {
   }
 
   for(auto const &e : m_components) {
-    v.visitChild(e.second);
+    v.visitChild(e.first, e.second);
   }
 }

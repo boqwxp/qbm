@@ -38,6 +38,9 @@ public:
 # include <limits>
 
   void QdlParser::error(std::string  msg) {
+    std::string  line;
+    getline(m_in, line);
+    msg += " before \"" + line + '"';
     std::cerr << msg << std::endl;
     throw  msg;
   }
@@ -172,10 +175,16 @@ public:
       case EOF:
 	return  0;
 
+      case '.':
+	if(in.peek() == '.') {
+	  in.ignore();
+	  return  THROUGH;
+	}
+	
       case '-':
 	if(in.peek() == '>') {
 	  in.ignore();
-	  return  TO;
+	  return  MAPSTO;
 	}
 	return  c;
 
@@ -229,9 +238,11 @@ public:
 	if(w == "constant")   return  CONSTANT;
 	if(w == "config")     return  CONFIG;
 	if(w == "CHOOSE")     return  CHOOSE;
-	if(w == "signal")     return  SIGNAL;
 	if(w == "end")        return  END;
+	if(w == "for")        return  FOR;
+	if(w == "generate")   return  GENERATE;
 	if(w == "ld")	      return  LD;
+	if(w == "signal")     return  SIGNAL;
 
 	sval = w;
 	return  IDENT;
@@ -256,7 +267,8 @@ public:
 
 %%
 %left  POWER
-%token NUMBER IDENT TO LD COMPONENT CONSTANT CONFIG SIGNAL CHOOSE END
+%token NUMBER IDENT
+%token CHOOSE COMPONENT CONFIG CONSTANT END FOR GENERATE LD MAPSTO SIGNAL THROUGH
 %start comp_decl
 %%
 comp_decl_start : COMPONENT IDENT {
@@ -284,7 +296,7 @@ comp_decl_in  : comp_decl_start '(' bus {
  		  $1.comp().addPort(PortDecl::Direction::in, $3.name(), $3.width());
 		  $$ = $1;
                 }
-comp_decl_out : comp_decl_in TO bus {
+comp_decl_out : comp_decl_in MAPSTO bus {
                   $1.comp().addPort(PortDecl::Direction::out, $3.name(), $3.width());
 		  $$ = $1;
                 }
@@ -308,6 +320,7 @@ stmt	: CONSTANT IDENT '=' expr {
 	| SIGNAL bus { $$ = std::make_shared<SignalDecl>($2.name(), $2.width()); }
         | expr '=' expr { $$ = std::make_shared<Equation>($1.expr(), $3.expr()); }
         | inst_out ')' { $$ = $1; }
+	| generate END { $$ = $1; }
 
 inst_start : IDENT ':' IDENT {
                $$ = std::make_shared<Instantiation>($1.name(), m_lib.resolveComponent($3.name()));
@@ -333,7 +346,7 @@ inst_in    : inst_start '(' expr {
 	       $$ = $1;
              }
 
-inst_out   : inst_in TO expr {
+inst_out   : inst_in MAPSTO expr {
                static_cast<Instantiation&>(*$1.stmt()).addConnection($3.expr());
 	       $$ = $1;
              }
@@ -341,6 +354,14 @@ inst_out   : inst_in TO expr {
                static_cast<Instantiation&>(*$1.stmt()).addConnection($3.expr());
 	       $$ = $1;
              }
+
+generate   : FOR IDENT '=' expr THROUGH expr GENERATE {
+	       $$ = std::make_shared<Generate>($2.name(), $4.expr(), $6.expr());
+	     }
+	   | generate stmt ';' {
+	       static_cast<Generate&>(*$1.stmt()).addStatement($2.stmt());
+	       $$ = $1;
+	     }
 
 // Bus Declaration
 bus	: IDENT {

@@ -167,9 +167,9 @@ void Root::printConfig(std::ostream &out) const {
     void visitConfig(std::string const &name, std::string const &bits) {
       m_out << '\t' << name << " = \"" << bits << "\";" << std::endl;
     }
-    void visitChild(Component const &child) {
+    void visitChild(std::string const &name, Component const &child) {
       std::string const  prev = m_path;
-      m_path += '/' + child.label() + ':' + child.type().name();
+      m_path += '/' + name + ':' + child.type().name();
       m_out << m_path << std::endl;
       child.accept(*this);
       m_path = prev;

@@ -57,7 +57,8 @@ public:
   void addConfig(std::string const &name, Bus const &bus) {
     m_configs.emplace(name, bus);
   }
-  void addComponent(Instantiation        const &decl,
+  void addComponent(std::string          const &name,
+		    Instantiation        const &decl,
 		    std::map<std::string, int> &params,
 		    std::map<std::string, Bus> &connects);
 
@@ -68,7 +69,7 @@ public:
     ~Visitor() {}
   public:
     virtual void visitConfig(std::string const &name, std::string const &bits) = 0;
-    virtual void visitChild(Component const &child) = 0;
+    virtual void visitChild(std::string const &name, Component const &child) = 0;
   };
   void accept(Visitor &v) const;
 };

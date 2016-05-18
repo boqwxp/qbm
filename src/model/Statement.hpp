@@ -129,7 +129,7 @@ public:
 public:
   void dump(std::ostream &out) const;
 
-  //- Generics ---------------------------------------------------------------
+  //- Generics
 public:
   void addParameter(std::shared_ptr<Expression const>  expr) {
     m_params.emplace_back(expr);
@@ -141,7 +141,7 @@ public:
     return *m_params[idx];
   }
 
-  //- Ports ------------------------------------------------------------------
+  //- Ports
 public:
   void addConnection(std::shared_ptr<Expression const>  expr) {
     m_connects.emplace_back(expr);
@@ -150,7 +150,33 @@ public:
     return *m_params[idx];
   }
 
-  //- Execution --------------------------------------------------------------
+  //- Execution
+public:
+  void execute(Context &ctx) const;
+};
+
+//- Generate -----------------------------------------------------------------
+class Generate : public Statement {
+  std::string const                  m_var;
+  std::shared_ptr<Expression const>  m_lo;
+  std::shared_ptr<Expression const>  m_hi;
+  std::vector<std::shared_ptr<Statement const>>  m_body;
+
+public:
+  Generate(std::string const                 &var,
+	   std::shared_ptr<Expression const>  lo,
+	   std::shared_ptr<Expression const>  hi)
+    : m_var(var), m_lo(lo), m_hi(hi) {}
+  ~Generate();
+
+public:
+  void dump(std::ostream &out) const;
+
+public:
+  void addStatement(std::shared_ptr<Statement const >  stmt) {
+    m_body.emplace_back(stmt);
+  }
+
 public:
   void execute(Context &ctx) const;
 };

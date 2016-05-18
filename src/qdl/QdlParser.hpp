@@ -40,17 +40,20 @@ enum {
   POWER = 256,
   NUMBER = 257,
   IDENT = 258,
-  TO = 259,
-  LD = 260,
-  COMPONENT = 261,
+  CHOOSE = 259,
+  COMPONENT = 260,
+  CONFIG = 261,
   CONSTANT = 262,
-  CONFIG = 263,
-  SIGNAL = 264,
-  CHOOSE = 265,
-  END = 266,
+  END = 263,
+  FOR = 264,
+  GENERATE = 265,
+  LD = 266,
+  MAPSTO = 267,
+  SIGNAL = 268,
+  THROUGH = 269,
 };
 private:
-enum { YYINTERN = 267 };
+enum { YYINTERN = 270 };
 static unsigned short const  yyintern[];
 static char const    *const  yyterms[];
 
@@ -60,8 +63,8 @@ static unsigned short const  yylhs   [];
 static char const    *const  yyrules [];
 
 private:
-static unsigned short const  yygoto  [][18];
-static signed   short const  yyaction[][33];
+static unsigned short const  yygoto  [][19];
+static signed   short const  yyaction[][36];
 };
 
 #endif

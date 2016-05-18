@@ -190,7 +190,10 @@ namespace {
 	return;
 
       default:
-	throw "Unsupported Operation";
+	std::stringstream  out;
+	ExpressionPrinter  prn(out);
+	expr.accept(prn);
+	throw "Unsupported Operation: " + out.str();
       }
 
       Bus const  res = m_ctx.allocateSignal(std::max(lhs.width(), rhs.width()));

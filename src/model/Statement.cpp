@@ -97,3 +97,23 @@ void Instantiation::execute(Context &ctx) const {
   }
   ctx.addComponent(*this, params, connects);
 }
+
+Generate::~Generate() {}
+void Generate::execute(Context &ctx) const {
+  int const  lo = ctx.computeConstant(*m_lo);
+  int const  hi = ctx.computeConstant(*m_hi);
+
+  std::string const& var = m_var;
+  for(int  i = lo; i <= hi; i++) {
+    Context  local(ctx);
+    local.defineConstant(var, i);
+    for(std::shared_ptr<Statement const> const& stmt : m_body) {
+      stmt->execute(local);
+    }
+  }
+}
+void Generate::dump(std::ostream &out) const {
+  out << "for " << m_var << '=' << *m_lo << ".." << *m_hi << " generate" << std::endl;
+  for(auto const &stmt : m_body)  stmt->dump(out);
+  out << "end;";
+}
