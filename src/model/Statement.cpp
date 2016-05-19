@@ -97,7 +97,7 @@ void Instantiation::execute(Context &ctx) const {
       connects[m_decl.getPort(i).name()] = ctx.computeBus(*m_connects[i]);
     }
   }
-  Context(ctx.root(), ctx.createChildScope(m_label + '/'), params, connects).compile(m_label, m_decl);
+  Context(ctx, m_label + '/', params, connects).compile(m_label, m_decl);
 }
 
 Generate::~Generate() {}
@@ -109,7 +109,7 @@ void Generate::execute(Context &ctx) const {
   for(int  i = lo; i <= hi; i++) {
     std::stringstream  name;
     name << i << '.';
-    Context  local(ctx, ctx.createChildScope(name.str()));
+    InnerContext  local(ctx, name.str());
     local.defineConstant(var, i);
     for(std::shared_ptr<Statement const> const& stmt : m_body) {
       stmt->execute(local);

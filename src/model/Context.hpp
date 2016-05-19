@@ -30,30 +30,30 @@
 class Expression;
 
 class Context {
-  Root  &m_root;
-  Scope &m_scope;
+  Root     &m_root;
+  Scope    &m_scope;
+  unsigned  m_subcnt;
 
+protected:
   std::map<std::string, int>  m_constants;
   std::map<std::string, Bus>  m_busses;
 
-  unsigned     m_subcnt;
-
 public:
+  Context(Context const&) = delete;
   Context(Root &root, Scope &scope) : m_root(root), m_scope(scope), m_subcnt(0) {}
-  Context(Root &root, Scope &scope,
+
+  Context(Context &parent, std::string const &name,
 	  std::map<std::string, int> &constants,
 	  std::map<std::string, Bus> &busses)
-    : m_root(root), m_scope(scope), m_subcnt(0) {
+    : m_root(parent.root()), m_scope(parent.scope().createChild(name)), m_subcnt(0) {
     std::swap(m_constants, constants);
     std::swap(m_busses,    busses);
   }
-  Context(Context const &parent, Scope &scope)
-    : m_root(parent.m_root), m_scope(scope),
-      m_constants(parent.m_constants), m_busses(parent.m_busses), m_subcnt(0) {}
   ~Context() {}
 
 public:
-  Root& root() { return  m_root; }
+  Root&  root()  { return  m_root; }
+  Scope& scope() { return  m_scope; }
 
 public:
   Bus allocateConfig(unsigned  width) { return  m_root.allocateConfig(width); }
@@ -80,18 +80,28 @@ public:
     std::cout << "Compiling " << name << " : " << comp.name() << " ..." << std::endl;
     comp.forAllStatements([this](Statement const &stmt) { stmt.execute(*this); });
   }
-  Scope& createChildScope(std::string const &name) {
-    return  m_scope.createChild(name);
-  }
 
 public:
   void defineConstant(std::string const &name, int val);
-  int resolveConstant(std::string const &name) const;
   int computeConstant(Expression  const &name) const;
+  virtual int resolveConstant(std::string const &name) const;
 
   void registerConfig(std::string const &name, Bus const &bus);
   void registerSignal(std::string const &name, Bus const &bus);
-  Bus resolveBus(std::string const &name) const;
   Bus computeBus(Expression  const &name);
+  virtual Bus resolveBus(std::string const &name) const;
+};
+
+class InnerContext : public Context {
+  Context const &m_parent;
+
+public:
+  InnerContext(Context &parent, std::string const &name)
+    : Context(parent.root(), parent.scope().createChild(name)), m_parent(parent) {}
+  ~InnerContext() {}
+
+public:
+  virtual int resolveConstant(std::string const &name) const;
+  virtual Bus resolveBus(std::string const &name) const;
 };
 #endif

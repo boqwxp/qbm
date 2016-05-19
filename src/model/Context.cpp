@@ -311,7 +311,7 @@ void Context::defineConstant(std::string const &name, int val) {
 int Context::resolveConstant(std::string const &name) const {
   auto const  it = m_constants.find(name);
   if(it != m_constants.end())  return  it->second;
-  throw  m_scope.name() + ": Constant " + name + " is not defined.";
+  throw  m_scope.name() + ": \"" + name + "\" is not defined.";
 }
 int Context::computeConstant(Expression const &expr) const {
   Computer  comp(*this);
@@ -342,4 +342,21 @@ Bus Context::computeBus(Expression const &expr) {
   Builder  bld(*this);
   expr.accept(bld);
   return  bld.m_val;
+}
+
+int InnerContext::resolveConstant(std::string const &name) const {
+  auto const  it = m_constants.find(name);
+  return (it != m_constants.end())? it->second : m_parent.resolveConstant(name);
+}
+
+Bus InnerContext::resolveBus(std::string const &name) const {
+  { // Local name of physical bus?
+    auto const  it = m_busses.find(name);
+    if(it != m_busses.end())  return  it->second;
+  }
+  { // Try a local constant ...
+    auto const  it = m_constants.find(name);
+    if(it != m_constants.end())  return  it->second;
+  }
+  return  m_parent.resolveBus(name);
 }
