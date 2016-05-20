@@ -4,7 +4,7 @@
 
 # include <memory>
 # include <stack>
-# include <map>
+# include <unordered_map>
 # include <istream>
   class Lib;
   class SVal;
@@ -21,7 +21,7 @@ class QdlParser {
 
   class StreamDeleter;
   std::stack<std::unique_ptr<std::istream, StreamDeleter>>  m_sources;
-  std::map<std::string, std::string>                        m_defines;
+  std::unordered_map<std::string, std::string>              m_defines;
 
   //- Life Cycle ---------------------------------------------------------------
 public:

@@ -1,7 +1,7 @@
 %header{
 # include <memory>
 # include <stack>
-# include <map>
+# include <unordered_map>
 # include <istream>
   class Lib;
   class SVal;
@@ -13,7 +13,7 @@
 
   class StreamDeleter;
   std::stack<std::unique_ptr<std::istream, StreamDeleter>>  m_sources;
-  std::map<std::string, std::string>                        m_defines;
+  std::unordered_map<std::string, std::string>              m_defines;
 
   //- Life Cycle ---------------------------------------------------------------
 public:
@@ -316,7 +316,7 @@ private:
 	if(w == "signal")     return  SIGNAL;
 	auto const  it = m_defines.find(w);
 	if(it != m_defines.end()) {
-	  // Remove this macro definition to counter recursions
+	  // Temporarily remove this macro definition to counter recursions
 	  std::pair<std::string, std::string>  cap = *it;
 	  m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(new std::stringstream(it->second),
 									 StreamDeleter([this, cap](std::istream *is) {

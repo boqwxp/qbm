@@ -288,7 +288,7 @@
 	if(w == "signal")     return  SIGNAL;
 	auto const  it = m_defines.find(w);
 	if(it != m_defines.end()) {
-	  // Remove this macro definition to counter recursions
+	  // Temporarily remove this macro definition to counter recursions
 	  std::pair<std::string, std::string>  cap = *it;
 	  m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(new std::stringstream(it->second),
 									 StreamDeleter([this, cap](std::istream *is) {
