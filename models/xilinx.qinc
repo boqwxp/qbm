@@ -1,0 +1,18 @@
+'include "core.qinc"
+
+//---------------------------------------------------------------------------
+// Xilinx Components
+component LUT6_2(x[6] -> o6, o5)
+  signal o5h;
+  hi: LUT<5>(x[4:0] -> o5h);
+  lo: LUT<5>(x[4:0] -> o5);
+  o6 = x[5]? o5h : o5;
+end;
+
+component CLB(x[6], cin -> y, cout)
+  signal o6;
+  signal o5;
+  lut : LUT6_2(x -> o6, o5);
+  cout = o6? cin : o5;
+  dmux : CMUX<4>(cout#(cin^o6)#o5#o6 -> y);
+end;

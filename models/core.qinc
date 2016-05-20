@@ -1,0 +1,20 @@
+//---------------------------------------------------------------------------
+// General-Purpose Components
+component LUT<K>(x[K] -> y)
+  config c[2**K];
+  y = c[x];
+end;
+
+component CMUX<K>(x[K] -> y)
+  config c[ld K];
+  y = x[c];
+end;
+
+component ADD<N>(a[N], b[N], cin -> s[N+1])
+  signal  p[N];    // propagates
+  signal  c[N+1];  // carries
+  p      = a ^ b;
+  c[0]   = cin;
+  c[N:1] = p? c[N-1:0] : a;
+  s      = c ^ p;
+end;
