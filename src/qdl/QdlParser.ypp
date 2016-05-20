@@ -253,8 +253,8 @@ private:
 
 	  sscanf(line.c_str()+7, " \"%[^\"]\" %n", filename.get(), &end);
 	  if((size_t)(end+7) == line.size()) {
-	    m_sources.emplace(new std::ifstream(filename.get()), std::default_delete<std::istream>());
-	    in = m_sources.top().get();
+	    m_sources.emplace(in = new std::ifstream(filename.get()),
+			      std::default_delete<std::istream>());
 	    continue;
 	  }
 	}
@@ -309,13 +309,12 @@ private:
 	if(it != m_defines.end()) {
 	  // Temporarily remove this macro definition to counter recursions
 	  std::pair<std::string, std::string>  cap = *it;
-	  m_sources.emplace(new std::stringstream(it->second),
+	  m_sources.emplace(in = new std::stringstream(it->second),
 			    [this, cap](std::istream *is) {
 			      m_defines.emplace(cap.first, cap.second);
 			      delete  is;
 			    });
 	  m_defines.erase(it);
-	  in = m_sources.top().get();
 	  continue;
 	}
 
