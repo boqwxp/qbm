@@ -2,23 +2,28 @@
 #define QDLPARSER_HPP_INCLUDED
 #line 1 "QdlParser.ypp"
 
-# include <istream>
+# include <stack>
+# include <fstream>
   class Lib;
   class SVal;
 
-#line 9 "QdlParser.hpp"
+#line 10 "QdlParser.hpp"
 #include <string>
 class QdlParser {
   typedef SVal YYSVal;
   class YYStack;
-#line 7 "QdlParser.ypp"
+#line 8 "QdlParser.ypp"
 
-  std::istream &m_in;
-  Lib          &m_lib;
+  std::istream              &m_source;
+  std::stack<std::ifstream>  m_includes;
+  bool                       m_newline;
+
+  Lib                       &m_lib;
 
   //- Life Cycle ---------------------------------------------------------------
 public:
-  QdlParser(std::istream &in, Lib &lib) : m_in(in), m_lib(lib) { parse(); }
+  QdlParser(std::istream &in, Lib &lib)
+    : m_source(in), m_newline(true), m_lib(lib) { parse(); }
   ~QdlParser() {}
 
   //- Parser Interface Methods -------------------------------------------------
@@ -32,7 +37,7 @@ private:
   //- Usage Interface ----------------------------------------------------------
 public:
 
-#line 35 "QdlParser.hpp"
+#line 40 "QdlParser.hpp"
 private:
   void parse();
 public:

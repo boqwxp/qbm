@@ -1,16 +1,21 @@
 %header{
-# include <istream>
+# include <stack>
+# include <fstream>
   class Lib;
   class SVal;
 }
 
 %class QdlParser {
-  std::istream &m_in;
-  Lib          &m_lib;
+  std::istream              &m_source;
+  std::stack<std::ifstream>  m_includes;
+  bool                       m_newline;
+
+  Lib                       &m_lib;
 
   //- Life Cycle ---------------------------------------------------------------
 public:
-  QdlParser(std::istream &in, Lib &lib) : m_in(in), m_lib(lib) { parse(); }
+  QdlParser(std::istream &in, Lib &lib)
+    : m_source(in), m_newline(true), m_lib(lib) { parse(); }
   ~QdlParser() {}
 
   //- Parser Interface Methods -------------------------------------------------
@@ -39,9 +44,8 @@ public:
 
   void QdlParser::error(std::string  msg) {
     std::string  line;
-    getline(m_in, line);
+    getline(m_includes.empty()? m_source : m_includes.top(), line);
     msg += " before \"" + line + '"';
-    std::cerr << msg << std::endl;
     throw  msg;
   }
 
@@ -165,14 +169,22 @@ public:
   };
 
   unsigned QdlParser::nextToken(YYSVal &sval) {
-    std::istream &in = m_in;
+    bool  newline = m_newline;
+    m_newline = false;
 
+  restart:
+    std::istream &in = m_includes.empty()? m_source : m_includes.top();
     while(true) {
       int const  c = in.get();
 
       // Filter out Operators
       switch(c) {
       case EOF:
+	if(!m_includes.empty()) {
+	  m_includes.pop();
+	  newline = true;
+	  goto  restart;
+	}
 	return  0;
 
       case '.':
@@ -180,6 +192,7 @@ public:
 	  in.ignore();
 	  return  THROUGH;
 	}
+	goto  err;
 	
       case '-':
 	if(in.peek() == '>') {
@@ -198,6 +211,7 @@ public:
       case '/':
 	if(in.peek() == '/') {
 	  in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	  newline = true;
 	  continue;
 	}
 	return  c;
@@ -221,10 +235,27 @@ public:
       case '?':
       case '#':
 	return  c;
-      }
 
+      case '\'': // check for directives
+	if(newline) {
+	  std::string   line;
+	  getline(in, line, '\n');
+	  std::unique_ptr<char[]>  filename(new char[line.size()]);
+	  int  end = -1;
+	  sscanf(line.c_str(), "include \"%[^\"]\"%n", filename.get(), &end);
+	  if(end != (int)line.size()) {
+	    throw "Malformed directive: " + line;
+	  }
+	  m_includes.emplace(filename.get());
+	  goto  restart;
+	}
+	goto  err;
+      }
       // Skip Space
-      if(isspace(c))  continue;
+      if(isspace(c)) {
+	newline = c == '\n';
+	continue;
+      }
 
       // Keywords and Identifiers
       if(isalpha(c) || (c == '_')) {
@@ -259,7 +290,7 @@ public:
 	return  NUMBER;
       }
 
-      // Error
+    err:
       error(std::string("Illegal Character: '") + (char)c + "'");
     }
   } // nextToken()
