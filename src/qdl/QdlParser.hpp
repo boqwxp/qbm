@@ -2,30 +2,44 @@
 #define QDLPARSER_HPP_INCLUDED
 #line 1 "QdlParser.ypp"
 
+# include <memory>
 # include <stack>
 # include <map>
-# include <fstream>
+# include <istream>
   class Lib;
   class SVal;
 
-#line 11 "QdlParser.hpp"
+#line 12 "QdlParser.hpp"
 #include <string>
 class QdlParser {
   typedef SVal YYSVal;
   class YYStack;
-#line 9 "QdlParser.ypp"
+#line 10 "QdlParser.ypp"
 
-  std::istream                       &m_source;
-  std::stack<std::ifstream>           m_includes;
-  bool                                m_newline;
-  std::map<std::string, std::string>  m_defines;
+  Lib  &m_lib;
+  bool  m_newline;
 
-  Lib                       &m_lib;
+  class StreamDeleter {
+    bool const  m_active;
+  public:
+    StreamDeleter(bool active) : m_active(active) {}
+    ~StreamDeleter() {}
+
+  public:
+    void operator()(std::istream *is) {
+      if(m_active)  delete  is;
+    }
+  };
+  std::stack<std::unique_ptr<std::istream, StreamDeleter>>  m_sources;
+  std::map<std::string, std::string>                        m_defines;
 
   //- Life Cycle ---------------------------------------------------------------
 public:
   QdlParser(std::istream &in, Lib &lib)
-    : m_source(in), m_newline(true), m_lib(lib) { parse(); }
+    : m_lib(lib), m_newline(true) {
+    m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(&in, StreamDeleter(false)));
+    parse();
+  }
   ~QdlParser() {}
 
   //- Parser Interface Methods -------------------------------------------------
@@ -33,13 +47,7 @@ private:
   void error(std::string  msg);
   unsigned nextToken(YYSVal &sval);
 
-  //- Private Parser Helpers ---------------------------------------------------
-private:
-
-  //- Usage Interface ----------------------------------------------------------
-public:
-
-#line 42 "QdlParser.hpp"
+#line 50 "QdlParser.hpp"
 private:
   void parse();
 public:
