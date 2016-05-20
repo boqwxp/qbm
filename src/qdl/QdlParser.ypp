@@ -11,28 +11,14 @@
   Lib  &m_lib;
   bool  m_newline;
 
-  class StreamDeleter {
-    bool const  m_active;
-  public:
-    StreamDeleter(bool active) : m_active(active) {}
-    ~StreamDeleter() {}
-
-  public:
-    void operator()(std::istream *is) {
-      if(m_active)  delete  is;
-    }
-  };
+  class StreamDeleter;
   std::stack<std::unique_ptr<std::istream, StreamDeleter>>  m_sources;
   std::map<std::string, std::string>                        m_defines;
 
   //- Life Cycle ---------------------------------------------------------------
 public:
-  QdlParser(std::istream &in, Lib &lib)
-    : m_lib(lib), m_newline(true) {
-    m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(&in, StreamDeleter(false)));
-    parse();
-  }
-  ~QdlParser() {}
+  QdlParser(std::istream &in, Lib &lib);
+  ~QdlParser();
 
   //- Parser Interface Methods -------------------------------------------------
 private:
@@ -53,6 +39,25 @@ private:
 # include <limits>
 # include <fstream>
 # include <sstream>
+
+  class QdlParser::StreamDeleter {
+    bool const  m_active;
+  public:
+    StreamDeleter(bool active) : m_active(active) {}
+    ~StreamDeleter() {}
+
+  public:
+    void operator()(std::istream *is) {
+      if(m_active)  delete  is;
+    }
+  };
+
+  QdlParser::QdlParser(std::istream &in, Lib &lib)
+    : m_lib(lib), m_newline(true) {
+    m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(&in, StreamDeleter(false)));
+    parse();
+  }
+  QdlParser::~QdlParser() {}
 
   void QdlParser::error(std::string  msg) {
     if(!m_sources.empty()) {
