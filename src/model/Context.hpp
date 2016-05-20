@@ -43,12 +43,10 @@ public:
   Context(Root &root, Scope &scope) : m_root(root), m_scope(scope), m_subcnt(0) {}
 
   Context(Context &parent, std::string const &name,
-	  std::map<std::string, int> &constants,
-	  std::map<std::string, Bus> &busses)
-    : m_root(parent.root()), m_scope(parent.scope().createChild(name)), m_subcnt(0) {
-    std::swap(m_constants, constants);
-    std::swap(m_busses,    busses);
-  }
+	  std::map<std::string, int> &&constants,
+	  std::map<std::string, Bus> &&busses)
+    : m_root(parent.root()), m_scope(parent.scope().createChild(name)), m_subcnt(0),
+      m_constants(constants), m_busses(busses) {}
   ~Context() {}
 
 public:

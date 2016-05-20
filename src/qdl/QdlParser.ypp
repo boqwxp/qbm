@@ -18,7 +18,9 @@
 
   //- Life Cycle ---------------------------------------------------------------
 public:
-  QdlParser(std::istream &in, Lib &lib);
+  QdlParser(std::istream                                 &in,
+	    std::unordered_map<std::string, std::string>&&defines,
+	    Lib                                          &lib);
   ~QdlParser();
 
   //- Parser Interface Methods -------------------------------------------------
@@ -42,8 +44,10 @@ private:
 # include <fstream>
 # include <sstream>
 
-  QdlParser::QdlParser(std::istream &in, Lib &lib)
-    : m_lib(lib), m_newline(true) {
+  QdlParser::QdlParser(std::istream                                 &in,
+		       std::unordered_map<std::string, std::string>&&defines,
+		       Lib                                          &lib)
+    : m_lib(lib), m_newline(true), m_defines(defines) {
     m_sources.emplace(&in, [](std::istream*){});
     parse();
   }

@@ -26,7 +26,9 @@ class QdlParser {
 
   //- Life Cycle ---------------------------------------------------------------
 public:
-  QdlParser(std::istream &in, Lib &lib);
+  QdlParser(std::istream                                 &in,
+	    std::unordered_map<std::string, std::string>&&defines,
+	    Lib                                          &lib);
   ~QdlParser();
 
   //- Parser Interface Methods -------------------------------------------------
@@ -34,7 +36,7 @@ private:
   void error(std::string  msg);
   unsigned nextToken(YYSVal &sval);
 
-#line 37 "QdlParser.hpp"
+#line 39 "QdlParser.hpp"
 private:
   void parse();
 public:

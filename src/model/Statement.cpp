@@ -97,7 +97,7 @@ void Instantiation::execute(Context &ctx) const {
       connects[m_decl.getPort(i).name()] = ctx.computeBus(*m_connects[i]);
     }
   }
-  Context(ctx, m_label + '/', params, connects).compile(m_label, m_decl);
+  Context(ctx, m_label + '/', std::move(params), std::move(connects)).compile(m_label, m_decl);
 }
 
 Generate::~Generate() {}
