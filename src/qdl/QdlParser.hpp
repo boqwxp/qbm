@@ -3,20 +3,22 @@
 #line 1 "QdlParser.ypp"
 
 # include <stack>
+# include <map>
 # include <fstream>
   class Lib;
   class SVal;
 
-#line 10 "QdlParser.hpp"
+#line 11 "QdlParser.hpp"
 #include <string>
 class QdlParser {
   typedef SVal YYSVal;
   class YYStack;
-#line 8 "QdlParser.ypp"
+#line 9 "QdlParser.ypp"
 
-  std::istream              &m_source;
-  std::stack<std::ifstream>  m_includes;
-  bool                       m_newline;
+  std::istream                       &m_source;
+  std::stack<std::ifstream>           m_includes;
+  bool                                m_newline;
+  std::map<std::string, std::string>  m_defines;
 
   Lib                       &m_lib;
 
@@ -37,7 +39,7 @@ private:
   //- Usage Interface ----------------------------------------------------------
 public:
 
-#line 40 "QdlParser.hpp"
+#line 42 "QdlParser.hpp"
 private:
   void parse();
 public:

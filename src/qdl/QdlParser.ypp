@@ -1,14 +1,16 @@
 %header{
 # include <stack>
+# include <map>
 # include <fstream>
   class Lib;
   class SVal;
 }
 
 %class QdlParser {
-  std::istream              &m_source;
-  std::stack<std::ifstream>  m_includes;
-  bool                       m_newline;
+  std::istream                       &m_source;
+  std::stack<std::ifstream>           m_includes;
+  bool                                m_newline;
+  std::map<std::string, std::string>  m_defines;
 
   Lib                       &m_lib;
 
@@ -237,20 +239,44 @@ public:
 	return  c;
 
       case '\'': // check for directives
-	if(newline) {
-	  std::string   line;
-	  getline(in, line, '\n');
+	if(!newline)  goto  err;
+	std::string   line;
+	getline(in, line, '\n');
+
+	if(line.compare(0, 7, "include") == 0) {
 	  std::unique_ptr<char[]>  filename(new char[line.size()]);
 	  int  end = -1;
-	  sscanf(line.c_str(), "include \"%[^\"]\"%n", filename.get(), &end);
-	  if(end != (int)line.size()) {
-	    throw "Malformed directive: " + line;
+
+	  sscanf(line.c_str()+7, " \"%[^\"]\" %n", filename.get(), &end);
+	  if((size_t)(end+7) == line.size()) {
+	    m_includes.emplace(filename.get());
+	    goto  restart;
 	  }
-	  m_includes.emplace(filename.get());
-	  goto  restart;
 	}
-	goto  err;
+	else if(line.compare(0, 6, "define") == 0) {
+	  std::unique_ptr<char[]>  ident(new char[line.size()]);
+	  std::unique_ptr<char[]>  value(new char[line.size()]);
+	  int end = -1;
+
+	  sscanf(line.c_str()+6, " %s %s %n", ident.get(), value.get(), &end);
+		 if((size_t)(end+6) == line.size()) {
+	    m_defines.emplace(ident.get(), value.get());
+	    continue;
+	  }
+	}
+	else if(line.compare(0, 5, "undef") == 0) {
+	  std::unique_ptr<char[]>  ident(new char[line.size()]);
+	  int end = -1;
+
+	  sscanf(line.c_str()+5, " %s %n", ident.get(), &end);
+	  if((size_t)(end+5) == line.size()) {
+	    m_defines.erase(ident.get());
+	    continue;
+	  }
+	}
+	throw "Malformed directive: " + line;
       }
+
       // Skip Space
       if(isspace(c)) {
 	newline = c == '\n';
