@@ -35,26 +35,25 @@ private:
 # include "CompDecl.hpp"
 # include "Lib.hpp"
 # include <cctype>
+# include <functional>
 # include <memory>
 # include <limits>
 # include <fstream>
 # include <sstream>
 
   class QdlParser::StreamDeleter {
-    bool const  m_active;
+    std::function<void(std::istream*)>  m_action;
   public:
-    StreamDeleter(bool active) : m_active(active) {}
+    StreamDeleter(std::function<void(std::istream*)> const &action) : m_action(action) {}
     ~StreamDeleter() {}
 
   public:
-    void operator()(std::istream *is) {
-      if(m_active)  delete  is;
-    }
+    void operator()(std::istream *is) { m_action(is); }
   };
 
   QdlParser::QdlParser(std::istream &in, Lib &lib)
     : m_lib(lib), m_newline(true) {
-    m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(&in, StreamDeleter(false)));
+    m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(&in, StreamDeleter([](std::istream*){})));
     parse();
   }
   QdlParser::~QdlParser() {}
@@ -263,7 +262,7 @@ private:
 
 	  sscanf(line.c_str()+7, " \"%[^\"]\" %n", filename.get(), &end);
 	  if((size_t)(end+7) == line.size()) {
-	    m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(new std::ifstream(filename.get()), StreamDeleter(true)));
+	    m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(new std::ifstream(filename.get()), StreamDeleter(std::default_delete<std::istream>())));
 	    in = m_sources.top().get();
 	    continue;
 	  }
@@ -317,7 +316,16 @@ private:
 	if(w == "signal")     return  SIGNAL;
 	auto const  it = m_defines.find(w);
 	if(it != m_defines.end()) {
-	  m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(new std::stringstream(it->second), StreamDeleter(true)));
+	  // Remove this macro definition to counter recursions
+	  std::pair<std::string, std::string>  cap = *it;
+	  m_sources.emplace(std::unique_ptr<std::istream, StreamDeleter>(new std::stringstream(it->second),
+									 StreamDeleter([this, cap](std::istream *is) {
+									     m_defines.emplace(cap.first, cap.second);
+									     delete  is;
+									   })
+									 )
+			    );
+	  m_defines.erase(it);
 	  in = m_sources.top().get();
 	  continue;
 	}
