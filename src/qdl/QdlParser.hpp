@@ -3,25 +3,26 @@
 #line 1 "QdlParser.ypp"
 
 # include <memory>
+# include <functional>
 # include <stack>
 # include <unordered_map>
 # include <istream>
   class Lib;
   class SVal;
 
-#line 12 "QdlParser.hpp"
+#line 13 "QdlParser.hpp"
 #include <string>
 class QdlParser {
   typedef SVal YYSVal;
   class YYStack;
-#line 10 "QdlParser.ypp"
+#line 11 "QdlParser.ypp"
 
   Lib  &m_lib;
   bool  m_newline;
 
-  class StreamDeleter;
-  std::stack<std::unique_ptr<std::istream, StreamDeleter>>  m_sources;
-  std::unordered_map<std::string, std::string>              m_defines;
+  std::stack<std::unique_ptr<std::istream, std::function<void(std::istream*)>>>
+                                                m_sources;
+  std::unordered_map<std::string, std::string>  m_defines;
 
   //- Life Cycle ---------------------------------------------------------------
 public:
@@ -33,7 +34,7 @@ private:
   void error(std::string  msg);
   unsigned nextToken(YYSVal &sval);
 
-#line 36 "QdlParser.hpp"
+#line 37 "QdlParser.hpp"
 private:
   void parse();
 public:
