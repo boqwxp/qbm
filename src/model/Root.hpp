@@ -44,7 +44,7 @@ private:
   Result  m_res;
 
 public:
-  Root(CompDecl const &decl);
+  Root(CompDecl const &decl, std::vector<int> const &generics);
   ~Root() {}
 
 public:

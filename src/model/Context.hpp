@@ -40,7 +40,10 @@ protected:
 
 public:
   Context(Context const&) = delete;
-  Context(Root &root, Scope &scope) : m_root(root), m_scope(scope), m_subcnt(0) {}
+  Context(Root &root, Scope &scope)
+    : m_root(root), m_scope(scope), m_subcnt(0) {}
+  Context(Root &root, Scope &scope, std::map<std::string, int> &&constants)
+    : m_root(root), m_scope(scope), m_subcnt(0), m_constants(constants) {}
 
   Context(Context &parent, std::string const &name,
 	  std::map<std::string, int> &&constants,

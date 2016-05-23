@@ -25,13 +25,20 @@
 #include <iostream>
 #include <sstream>
 
-Root::Root(CompDecl const &decl)
+Root::Root(CompDecl const &decl, std::vector<int> const &generics)
   : m_top(""),
     m_confignxt(FIRST_CONFIG),
     m_inputnxt (FIRST_INPUT),
     m_signalnxt(FIRST_SIGNAL) {
 
-  Context  ctx(*this, m_top);
+  std::map<std::string, int>  params;
+  { // Compute Generic Parameters
+    unsigned const  n = generics.size();
+    if(n != decl.countParameters())  throw "Wrong number of parameters.";
+    for(unsigned  i = 0; i < n; i++)  params[decl.getParameter(i).name()] = generics[i];
+  }
+
+  Context  ctx(*this, m_top, std::move(params));
   decl.forAllPorts([this, &ctx](PortDecl const &decl) {
       int const  width = ctx.computeConstant(decl.width());
       ctx.registerSignal(decl.name(), decl.direction() == PortDecl::Direction::in? allocateInput(width) : allocateSignal(width));

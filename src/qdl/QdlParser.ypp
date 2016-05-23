@@ -49,7 +49,17 @@ private:
 		       Lib                                          &lib)
     : m_lib(lib), m_newline(true), m_defines(defines) {
     m_sources.emplace(&in, [](std::istream*){});
-    parse();
+    try {
+      parse();
+    }
+    catch(...) {
+      if(!m_sources.empty()) {
+	std::string  line;
+	getline(*m_sources.top(), line);
+	std::cerr << "@\"" + line + '"' << std::endl;
+      }
+      throw;
+    }
   }
   QdlParser::~QdlParser() {}
 
@@ -309,6 +319,7 @@ private:
 	if(w == "generate")   return  GENERATE;
 	if(w == "ld")	      return  LD;
 	if(w == "signal")     return  SIGNAL;
+
 	auto const  it = m_defines.find(w);
 	if(it != m_defines.end()) {
 	  // Temporarily remove this macro definition to counter recursions

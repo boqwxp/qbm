@@ -29,7 +29,3 @@ CompDecl& Lib::declareComponent(std::string const &name) {
   if(!res.second)  throw "Component type " + name + " already declared.";
   return  res.first->second;
 }
-Root* Lib::compile(std::string const &top) {
-  CompDecl const &decl = m_components.at(top);
-  return  new Root(decl);
-}

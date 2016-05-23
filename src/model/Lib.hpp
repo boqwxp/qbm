@@ -40,8 +40,9 @@ public:
 public:
   CompDecl& declareComponent(std::string const &name);
   CompDecl const& resolveComponent(std::string const &name) const {
-    return  m_components.at(name);
+    auto const  it = m_components.find(name);
+    if(it != m_components.end())  return  it->second;
+    throw "Component \"" + name + "\" not found.";
   }
-  Root* compile(std::string const &top);
 };
 #endif
