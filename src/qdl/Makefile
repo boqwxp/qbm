@@ -1,4 +1,4 @@
-CXXFLAGS := -std=gnu++11 -Wall -O3 -I../model -I../../lib/quantor-3.2
+CXXFLAGS := -std=gnu++11 -Wall $(if $(DEBUG),-ggdb,-O3) -I../model -I../../lib/quantor-3.2
 CXX      := g++
 CC       := g++
 
