@@ -1,4 +1,4 @@
-'include "core.qinc"
+'include "models/core.qinc"
 
 //---------------------------------------------------------------------------
 // Xilinx Components

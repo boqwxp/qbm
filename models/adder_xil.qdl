@@ -1,0 +1,26 @@
+'include "models/xilinx.qinc"
+
+'define SELECT_COMPLETE for j = 0..5 generate sel: CMUX<2*N+2>(x0 -> x[j:j]); end
+'define SELECT_REDUCED  for j = 0..5 generate sel: CMUX<2*N+2-j>(x0[2*N+1-j:0] -> x[5-j:5-j]); end
+'define SELECT_CHOOSE   x = CHOOSE<6>(x0)
+
+component adder_xil<N>(a[N], b[N] -> s[N+1])
+  signal c10[2];
+  c10 = 2;
+
+  fct : ADD<N>(a, b, 0 -> s);
+
+  config cin;
+  signal cy[N+1];
+  cy[0:0] = cin;
+  s[N+1:N+1] = cy[N+1:N+1];
+
+  for i = 0 .. N-1 generate
+    signal  x0[2*N+2];
+    x0 = a#b#c10;
+    signal  x[6];
+    SELECT;
+    clb: CLB(x, cy[i:i] -> s[i:i], cy[i+1:i+1]);
+  end;
+
+end;
