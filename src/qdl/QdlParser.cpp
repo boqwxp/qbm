@@ -243,14 +243,12 @@
 	}
 	else if(line.compare(0, 6, "define") == 0) {
 	  std::unique_ptr<char[]>  ident(new char[line.size()]);
-	  std::unique_ptr<char[]>  value(new char[line.size()]);
+	  char const *beg = line.c_str() + 6;
 	  int end = -1;
 
-	  sscanf(line.c_str()+6, " %s %s %n", ident.get(), value.get(), &end);
-		 if((size_t)(end+6) == line.size()) {
-	    m_defines.emplace(ident.get(), value.get());
-	    continue;
-	  }
+	  sscanf(beg, " %s %n", ident.get(), &end);
+	  m_defines.emplace(ident.get(), beg+end);
+	  continue;
 	}
 	else if(line.compare(0, 5, "undef") == 0) {
 	  std::unique_ptr<char[]>  ident(new char[line.size()]);
@@ -322,7 +320,7 @@
     }
   } // nextToken()
 
-#line 325 "QdlParser.cpp"
+#line 323 "QdlParser.cpp"
 #include <vector>
 class QdlParser::YYStack {
   class Ele {
@@ -807,439 +805,439 @@ void QdlParser::parse() {
         case 0:         // accept
           return;
 case 1: {
-#line 366 "QdlParser.ypp"
+#line 364 "QdlParser.ypp"
 
                     yylval = m_lib.declareComponent(yystack[yylen - 2].name());
                   
-#line 814 "QdlParser.cpp"
+#line 812 "QdlParser.cpp"
 break;
 }
 case 2: {
-#line 370 "QdlParser.ypp"
+#line 368 "QdlParser.ypp"
 
                   yystack[yylen - 1].comp().addParameter(yystack[yylen - 3].name());
 		  yylval = yystack[yylen - 1];
                 
-#line 823 "QdlParser.cpp"
+#line 821 "QdlParser.cpp"
 break;
 }
 case 3: {
-#line 374 "QdlParser.ypp"
+#line 372 "QdlParser.ypp"
 
                   yystack[yylen - 1].comp().addParameter(yystack[yylen - 3].name());
 		  yylval = yystack[yylen - 1];
                 
-#line 832 "QdlParser.cpp"
+#line 830 "QdlParser.cpp"
 break;
 }
 case 4: {
-#line 379 "QdlParser.ypp"
+#line 377 "QdlParser.ypp"
 
                   yystack[yylen - 1].comp().addPort(PortDecl::Direction::in, yystack[yylen - 3].name(), yystack[yylen - 3].width());
 		  yylval = yystack[yylen - 1];
                 
-#line 841 "QdlParser.cpp"
+#line 839 "QdlParser.cpp"
 break;
 }
 case 5: {
-#line 383 "QdlParser.ypp"
+#line 381 "QdlParser.ypp"
 
                   yystack[yylen - 1].comp().addPort(PortDecl::Direction::in, yystack[yylen - 4].name(), yystack[yylen - 4].width());
 		  yylval = yystack[yylen - 1];
                 
-#line 850 "QdlParser.cpp"
+#line 848 "QdlParser.cpp"
 break;
 }
 case 6: {
-#line 387 "QdlParser.ypp"
+#line 385 "QdlParser.ypp"
 
  		  yystack[yylen - 1].comp().addPort(PortDecl::Direction::in, yystack[yylen - 3].name(), yystack[yylen - 3].width());
 		  yylval = yystack[yylen - 1];
                 
-#line 859 "QdlParser.cpp"
+#line 857 "QdlParser.cpp"
 break;
 }
 case 7: {
-#line 391 "QdlParser.ypp"
+#line 389 "QdlParser.ypp"
 
                   yystack[yylen - 1].comp().addPort(PortDecl::Direction::out, yystack[yylen - 3].name(), yystack[yylen - 3].width());
 		  yylval = yystack[yylen - 1];
                 
-#line 868 "QdlParser.cpp"
+#line 866 "QdlParser.cpp"
 break;
 }
 case 8: {
-#line 395 "QdlParser.ypp"
+#line 393 "QdlParser.ypp"
 
  		  yystack[yylen - 1].comp().addPort(PortDecl::Direction::out, yystack[yylen - 3].name(), yystack[yylen - 3].width());
 		  yylval = yystack[yylen - 1];
 		
-#line 877 "QdlParser.cpp"
+#line 875 "QdlParser.cpp"
 break;
 }
 case 9: {
-#line 399 "QdlParser.ypp"
+#line 397 "QdlParser.ypp"
  yylval = yystack[yylen - 1]; 
-#line 883 "QdlParser.cpp"
+#line 881 "QdlParser.cpp"
 break;
 }
 case 10: {
-#line 400 "QdlParser.ypp"
+#line 398 "QdlParser.ypp"
 
 		  yystack[yylen - 1].comp().addStatement(yystack[yylen - 2].stmt());
 		  yylval = yystack[yylen - 1];
                 
-#line 892 "QdlParser.cpp"
+#line 890 "QdlParser.cpp"
 break;
 }
 case 13: {
-#line 408 "QdlParser.ypp"
+#line 406 "QdlParser.ypp"
 
             yylval = std::make_shared<ConstDecl>(yystack[yylen - 2].name(), yystack[yylen - 4].expr());
           
-#line 900 "QdlParser.cpp"
+#line 898 "QdlParser.cpp"
 break;
 }
 case 14: {
-#line 411 "QdlParser.ypp"
+#line 409 "QdlParser.ypp"
  yylval = std::make_shared<ConfigDecl>(yystack[yylen - 2].name(), yystack[yylen - 2].width()); 
-#line 906 "QdlParser.cpp"
+#line 904 "QdlParser.cpp"
 break;
 }
 case 15: {
-#line 412 "QdlParser.ypp"
+#line 410 "QdlParser.ypp"
  yylval = std::make_shared<SignalDecl>(yystack[yylen - 2].name(), yystack[yylen - 2].width()); 
-#line 912 "QdlParser.cpp"
+#line 910 "QdlParser.cpp"
 break;
 }
 case 16: {
-#line 413 "QdlParser.ypp"
+#line 411 "QdlParser.ypp"
  yylval = std::make_shared<Equation>(yystack[yylen - 1].expr(), yystack[yylen - 3].expr()); 
-#line 918 "QdlParser.cpp"
+#line 916 "QdlParser.cpp"
 break;
 }
 case 17: {
-#line 414 "QdlParser.ypp"
+#line 412 "QdlParser.ypp"
  yylval = yystack[yylen - 1]; 
-#line 924 "QdlParser.cpp"
+#line 922 "QdlParser.cpp"
 break;
 }
 case 18: {
-#line 415 "QdlParser.ypp"
+#line 413 "QdlParser.ypp"
  yylval = yystack[yylen - 1]; 
-#line 930 "QdlParser.cpp"
+#line 928 "QdlParser.cpp"
 break;
 }
 case 19: {
-#line 417 "QdlParser.ypp"
+#line 415 "QdlParser.ypp"
 
                yylval = std::make_shared<Instantiation>(yystack[yylen - 1].name(), m_lib.resolveComponent(yystack[yylen - 3].name()));
              
-#line 938 "QdlParser.cpp"
+#line 936 "QdlParser.cpp"
 break;
 }
 case 20: {
-#line 420 "QdlParser.ypp"
+#line 418 "QdlParser.ypp"
 
                static_cast<Instantiation&>(*yystack[yylen - 1].stmt()).addParameter(yystack[yylen - 3].expr());
 	       yylval = yystack[yylen - 1];
              
-#line 947 "QdlParser.cpp"
+#line 945 "QdlParser.cpp"
 break;
 }
 case 21: {
-#line 424 "QdlParser.ypp"
+#line 422 "QdlParser.ypp"
 
                static_cast<Instantiation&>(*yystack[yylen - 1].stmt()).addParameter(yystack[yylen - 3].expr());
 	       yylval = yystack[yylen - 1];
              
-#line 956 "QdlParser.cpp"
+#line 954 "QdlParser.cpp"
 break;
 }
 case 22: {
-#line 428 "QdlParser.ypp"
+#line 426 "QdlParser.ypp"
 
                static_cast<Instantiation&>(*yystack[yylen - 1].stmt()).addConnection(yystack[yylen - 3].expr());
 	       yylval = yystack[yylen - 1];
              
-#line 965 "QdlParser.cpp"
+#line 963 "QdlParser.cpp"
 break;
 }
 case 23: {
-#line 432 "QdlParser.ypp"
+#line 430 "QdlParser.ypp"
 
                static_cast<Instantiation&>(*yystack[yylen - 1].stmt()).addConnection(yystack[yylen - 4].expr());
 	       yylval = yystack[yylen - 1];
              
-#line 974 "QdlParser.cpp"
+#line 972 "QdlParser.cpp"
 break;
 }
 case 24: {
-#line 436 "QdlParser.ypp"
+#line 434 "QdlParser.ypp"
 
                static_cast<Instantiation&>(*yystack[yylen - 1].stmt()).addConnection(yystack[yylen - 3].expr());
 	       yylval = yystack[yylen - 1];
              
-#line 983 "QdlParser.cpp"
+#line 981 "QdlParser.cpp"
 break;
 }
 case 25: {
-#line 441 "QdlParser.ypp"
+#line 439 "QdlParser.ypp"
 
                static_cast<Instantiation&>(*yystack[yylen - 1].stmt()).addConnection(yystack[yylen - 3].expr());
 	       yylval = yystack[yylen - 1];
              
-#line 992 "QdlParser.cpp"
+#line 990 "QdlParser.cpp"
 break;
 }
 case 26: {
-#line 445 "QdlParser.ypp"
+#line 443 "QdlParser.ypp"
 
                static_cast<Instantiation&>(*yystack[yylen - 1].stmt()).addConnection(yystack[yylen - 3].expr());
 	       yylval = yystack[yylen - 1];
              
-#line 1001 "QdlParser.cpp"
+#line 999 "QdlParser.cpp"
 break;
 }
 case 27: {
-#line 450 "QdlParser.ypp"
+#line 448 "QdlParser.ypp"
 
 	       yylval = std::make_shared<Generate>(yystack[yylen - 2].name(), yystack[yylen - 4].expr(), yystack[yylen - 6].expr());
 	     
-#line 1009 "QdlParser.cpp"
+#line 1007 "QdlParser.cpp"
 break;
 }
 case 28: {
-#line 453 "QdlParser.ypp"
+#line 451 "QdlParser.ypp"
 
 	       static_cast<Generate&>(*yystack[yylen - 1].stmt()).addStatement(yystack[yylen - 2].stmt());
 	       yylval = yystack[yylen - 1];
 	     
-#line 1018 "QdlParser.cpp"
+#line 1016 "QdlParser.cpp"
 break;
 }
 case 29: {
-#line 459 "QdlParser.ypp"
+#line 457 "QdlParser.ypp"
 
             yylval.makeBus(yystack[yylen - 1].name(), std::make_shared<ConstExpression>(1));
           
-#line 1026 "QdlParser.cpp"
+#line 1024 "QdlParser.cpp"
 break;
 }
 case 30: {
-#line 462 "QdlParser.ypp"
+#line 460 "QdlParser.ypp"
 
 	    yylval.makeBus(yystack[yylen - 1].name(), yystack[yylen - 3].expr());
 	  
-#line 1034 "QdlParser.cpp"
+#line 1032 "QdlParser.cpp"
 break;
 }
 case 31: {
-#line 467 "QdlParser.ypp"
+#line 465 "QdlParser.ypp"
 
             yylval = std::make_shared<ConstExpression>(yystack[yylen - 1].number());
           
-#line 1042 "QdlParser.cpp"
+#line 1040 "QdlParser.cpp"
 break;
 }
 case 32: {
-#line 470 "QdlParser.ypp"
+#line 468 "QdlParser.ypp"
 
             yylval = std::make_shared<NameExpression>(yystack[yylen - 1].name());
           
-#line 1050 "QdlParser.cpp"
+#line 1048 "QdlParser.cpp"
 break;
 }
 case 33: {
-#line 473 "QdlParser.ypp"
+#line 471 "QdlParser.ypp"
 
 	    yylval = std::make_shared<UniExpression>(UniExpression::Op::NOT, yystack[yylen - 2].expr());
           
-#line 1058 "QdlParser.cpp"
+#line 1056 "QdlParser.cpp"
 break;
 }
 case 34: {
-#line 476 "QdlParser.ypp"
+#line 474 "QdlParser.ypp"
 
 	    yylval = yystack[yylen - 2];
 	  
-#line 1066 "QdlParser.cpp"
+#line 1064 "QdlParser.cpp"
 break;
 }
 case 35: {
-#line 479 "QdlParser.ypp"
+#line 477 "QdlParser.ypp"
 
 	    yylval = std::make_shared<UniExpression>(UniExpression::Op::NEG, yystack[yylen - 2].expr());
           
-#line 1074 "QdlParser.cpp"
+#line 1072 "QdlParser.cpp"
 break;
 }
 case 36: {
-#line 482 "QdlParser.ypp"
+#line 480 "QdlParser.ypp"
 
 	    yylval = std::make_shared<UniExpression>(UniExpression::Op::LD, yystack[yylen - 2].expr());
           
-#line 1082 "QdlParser.cpp"
+#line 1080 "QdlParser.cpp"
 break;
 }
 case 37: {
-#line 485 "QdlParser.ypp"
+#line 483 "QdlParser.ypp"
 
 	    yylval = std::make_shared<ChooseExpression>(yystack[yylen - 3].expr(), yystack[yylen - 6].expr());
 	  
-#line 1090 "QdlParser.cpp"
+#line 1088 "QdlParser.cpp"
 break;
 }
 case 38: {
-#line 488 "QdlParser.ypp"
+#line 486 "QdlParser.ypp"
 
 	    yylval = yystack[yylen - 2];
 	  
-#line 1098 "QdlParser.cpp"
+#line 1096 "QdlParser.cpp"
 break;
 }
 case 39: {
-#line 491 "QdlParser.ypp"
+#line 489 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::SEL, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1106 "QdlParser.cpp"
+#line 1104 "QdlParser.cpp"
 break;
 }
 case 40: {
-#line 494 "QdlParser.ypp"
+#line 492 "QdlParser.ypp"
 
 	    yylval = std::make_shared<RangeExpression>(yystack[yylen - 1].expr(), yystack[yylen - 3].expr(), yystack[yylen - 5].expr());
           
-#line 1114 "QdlParser.cpp"
+#line 1112 "QdlParser.cpp"
 break;
 }
 case 41: {
-#line 497 "QdlParser.ypp"
+#line 495 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::POW, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1122 "QdlParser.cpp"
+#line 1120 "QdlParser.cpp"
 break;
 }
 case 42: {
-#line 501 "QdlParser.ypp"
+#line 499 "QdlParser.ypp"
 
 	    yylval = yystack[yylen - 1];
 	  
-#line 1130 "QdlParser.cpp"
+#line 1128 "QdlParser.cpp"
 break;
 }
 case 43: {
-#line 504 "QdlParser.ypp"
+#line 502 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::CAT, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1138 "QdlParser.cpp"
+#line 1136 "QdlParser.cpp"
 break;
 }
 case 44: {
-#line 508 "QdlParser.ypp"
+#line 506 "QdlParser.ypp"
 
 	    yylval = yystack[yylen - 1];
 	  
-#line 1146 "QdlParser.cpp"
+#line 1144 "QdlParser.cpp"
 break;
 }
 case 45: {
-#line 511 "QdlParser.ypp"
+#line 509 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::MUL, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1154 "QdlParser.cpp"
+#line 1152 "QdlParser.cpp"
 break;
 }
 case 46: {
-#line 514 "QdlParser.ypp"
+#line 512 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::DIV, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1162 "QdlParser.cpp"
+#line 1160 "QdlParser.cpp"
 break;
 }
 case 47: {
-#line 517 "QdlParser.ypp"
+#line 515 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::MOD, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1170 "QdlParser.cpp"
+#line 1168 "QdlParser.cpp"
 break;
 }
 case 48: {
-#line 521 "QdlParser.ypp"
+#line 519 "QdlParser.ypp"
 
 	    yylval = yystack[yylen - 1];
 	  
-#line 1178 "QdlParser.cpp"
+#line 1176 "QdlParser.cpp"
 break;
 }
 case 49: {
-#line 524 "QdlParser.ypp"
+#line 522 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::AND, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1186 "QdlParser.cpp"
+#line 1184 "QdlParser.cpp"
 break;
 }
 case 50: {
-#line 527 "QdlParser.ypp"
+#line 525 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::OR, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1194 "QdlParser.cpp"
+#line 1192 "QdlParser.cpp"
 break;
 }
 case 51: {
-#line 530 "QdlParser.ypp"
+#line 528 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::XOR, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1202 "QdlParser.cpp"
+#line 1200 "QdlParser.cpp"
 break;
 }
 case 52: {
-#line 534 "QdlParser.ypp"
+#line 532 "QdlParser.ypp"
 
 	    yylval = yystack[yylen - 1];
 	  
-#line 1210 "QdlParser.cpp"
+#line 1208 "QdlParser.cpp"
 break;
 }
 case 53: {
-#line 537 "QdlParser.ypp"
+#line 535 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::ADD, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1218 "QdlParser.cpp"
+#line 1216 "QdlParser.cpp"
 break;
 }
 case 54: {
-#line 540 "QdlParser.ypp"
+#line 538 "QdlParser.ypp"
 
 	    yylval = std::make_shared<BiExpression>(BiExpression::Op::SUB, yystack[yylen - 1].expr(), yystack[yylen - 3].expr());
           
-#line 1226 "QdlParser.cpp"
+#line 1224 "QdlParser.cpp"
 break;
 }
 case 55: {
-#line 543 "QdlParser.ypp"
+#line 541 "QdlParser.ypp"
 
 	    yylval = yystack[yylen - 1];
 	  
-#line 1234 "QdlParser.cpp"
+#line 1232 "QdlParser.cpp"
 break;
 }
 case 56: {
-#line 546 "QdlParser.ypp"
+#line 544 "QdlParser.ypp"
 
 	    yylval = std::make_shared<CondExpression>(yystack[yylen - 1].expr(), yystack[yylen - 3].expr(), yystack[yylen - 5].expr());
           
-#line 1242 "QdlParser.cpp"
+#line 1240 "QdlParser.cpp"
 break;
 }
         }

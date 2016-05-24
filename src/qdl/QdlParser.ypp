@@ -274,14 +274,12 @@ private:
 	}
 	else if(line.compare(0, 6, "define") == 0) {
 	  std::unique_ptr<char[]>  ident(new char[line.size()]);
-	  std::unique_ptr<char[]>  value(new char[line.size()]);
+	  char const *beg = line.c_str() + 6;
 	  int end = -1;
 
-	  sscanf(line.c_str()+6, " %s %s %n", ident.get(), value.get(), &end);
-		 if((size_t)(end+6) == line.size()) {
-	    m_defines.emplace(ident.get(), value.get());
-	    continue;
-	  }
+	  sscanf(beg, " %s %n", ident.get(), &end);
+	  m_defines.emplace(ident.get(), beg+end);
+	  continue;
 	}
 	else if(line.compare(0, 5, "undef") == 0) {
 	  std::unique_ptr<char[]>  ident(new char[line.size()]);
