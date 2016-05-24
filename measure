@@ -1,0 +1,18 @@
+#!/bin/bash
+
+top=adder_xil
+for n in $(seq 4 6); do
+  for model in COMPLETE REDUCED CHOOSE; do
+    for solver in riss picosat; do
+      make SATSOLVER=$solver
+      {
+	echo "- $solver ----------------------------------------------------"
+	date
+	echo "BEGIN $top<$n>" $model
+	time bin/qdlsolve -t"$top<$n>" -D"SELECT=SELECT_$model" < models/$top.qdl
+	echo "END $top<$n>" $model
+	echo
+      } 2>&1 | tee -a $solver.log
+    done
+  done
+done
