@@ -68,9 +68,9 @@ public:
     if(end < m_width)  std::copy(src+beg, src+end+1, dst);
     else if(beg < m_width) {
       std::copy(src+beg, src+m_width, dst);
-      std::fill(dst+(m_width-beg), dst+len, Node::BOT);
+      std::fill(dst+(m_width-beg), dst+len, Node(Node::BOT));
     }
-    else  std::fill(dst, dst+len, Node::BOT);
+    else  std::fill(dst, dst+len, Node(Node::BOT));
     return  Bus(len, dst);
   }
   Bus operator~() const {
