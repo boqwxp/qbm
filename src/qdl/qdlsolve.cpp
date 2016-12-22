@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <fstream>
 
 #include "Lib.hpp"
 #include "Root.hpp"
@@ -29,12 +30,13 @@
 namespace {
   void usage(std::ostream &out, char const *const  prog) {
     out << '\n'<< prog <<
-      " [-tTOP[<PAR0,PAR1,...>]] [-DNAME[=VALUE] ...]\n\n"
+      " [-tTOP[<PAR0,PAR1,...>]] [-DNAME[=VALUE] ...] [-pFILE]\n\n"
       "Parse a configurable circuit description from stdin and compute an implementing\n"
       "configuration of the included user target function if it exists.\n\n"
       " TOP\tname of the top-level module defining the circuit, default: top\n"
       " PARi\tnumeric generic parameters passed to the top-level module, default: none\n"
       " NAME\tmacro definition with optional VALUE for expansion before parsing\n"
+      " FILE\tprint qdimacs formulation to FILE rather than solving the problem\n"
 	<< std::endl;
   }
 }
@@ -46,6 +48,7 @@ int main(int const  argc, char const *const  argv[]) {
   std::unordered_map<std::string, std::string>  defines;    // parser defines
   std::string       top("top"); // top-level name
   std::vector<int>  generics;   // top-level params
+  char const       *qdimacs = 0;
 
 
   // Extract parameters passed via the command line
@@ -73,6 +76,7 @@ int main(int const  argc, char const *const  argv[]) {
 	char     *name;
 	unsigned  end = 0;
 	switch(opt) {
+	  // User-defined top-level module with optional generics
 	case 't':
 	  sscanf(arg, " %m[A-Za-z_0-9] < %n", &name, &end);
 	  top = name;
@@ -90,10 +94,16 @@ int main(int const  argc, char const *const  argv[]) {
 	  }
 	  continue;
 
+	  // User-defined macro definitions
 	case 'D':
 	  sscanf(arg, " %m[A-Za-z_0-9] = %n", &name, &end);
 	  defines.emplace(name, end? arg+end : "");
 	  free(name);
+	  continue;
+
+	  // Print qdimacs formulation to file
+	case 'p':
+	  qdimacs = arg;
 	  continue;
 	}
       }
@@ -108,13 +118,23 @@ int main(int const  argc, char const *const  argv[]) {
     Lib  lib;
     QdlParser(std::cin, std::move(defines), lib);
     Root  root(lib.resolveComponent(top), generics);
+    //root.dumpClauses(std::cerr);
 
-    //root.dumpClauses(std::cout);
-    std::cerr << std::endl << "Solving ... ";
+    if(qdimacs) {
+      // Dump the posed problem to specified file
+      std::cerr << std::endl << "Dumping problem to file '" << qdimacs << '\'' << std::endl;;
 
-    Result const  res = root.solve();
-    std::cout << res << std::endl;
-    if(res)  root.printConfig(std::cout);
+      std::ofstream  out(qdimacs);
+      root.dumpQDimacs(out);
+    }
+    else {
+      // Solve the posed problem
+      std::cerr << std::endl << "Solving ... ";
+
+      Result const  res = root.solve();
+      std::cout << res << std::endl;
+      if(res)  root.printConfig(std::cout);
+    }
   }
   catch(char const *const  msg) {
     std::cerr << "Error:\n\t" << msg << std::endl;

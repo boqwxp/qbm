@@ -25,6 +25,8 @@
 #include "Scope.hpp"
 
 #include <vector>
+#include <functional>
+#include <algorithm>
 
 class CompDecl;
 class Root {
@@ -57,13 +59,14 @@ public:
   void addClause(int const *beg, int const *end);
   void dumpClauses(std::ostream &out) const;
 
+private:
+  std::function<int(int)> varCompactor() const;
+
 public:
+  void dumpQDimacs(std::ostream &out) const;
   Result solve();
   bool resolve(int const  v) const {
-    for(int  i : m_clauses) {
-      if(abs(i) == v)  return  i > 0;
-    }
-    return  false;
+    return  std::find(m_clauses.begin(), m_clauses.end(), v) != m_clauses.end();
   }
   void printConfig(std::ostream &out) const;
 };
