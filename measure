@@ -3,16 +3,18 @@
 top=adder_xil
 for n in $(seq 4 6); do
   for model in COMPLETE REDUCED CHOOSE; do
+   if [ $n -lt 6 -o $model != CHOOSE ]; then
     for solver in riss picosat; do
       make SATSOLVER=$solver
       {
 	echo "- $solver ----------------------------------------------------"
 	date
-	echo "BEGIN $top<$n>" $model
-	time bin/qdlsolve -t"$top<$n>" -D"SELECT=SELECT_$model" < models/$top.qdl
-	echo "END $top<$n>" $model
+	echo "BEGIN $top<$n>" $model i
+	time bin/qdlsolve -t"$top<$n>" -D"SELECT=SELECT_$model" < models/adderi_xil.qdl
+	echo "END $top<$n>" $model i
 	echo
-      } 2>&1 | tee -a $solver.log
+      } 2>&1 | tee -a ${solver}_i.log
     done
+   fi
   done
 done

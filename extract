@@ -1,0 +1,7 @@
+#!/bin/bash
+function filter() {
+  cat $1|sed -ne'/^BEGIN/h;/^real/!d;H;g;s/^BEGIN adder_xil<\([0-9]\+\)> \([A-Z]\+\).*real[ 	]\+\([0-9]\+\)m\([0-9.]\+\)s$/[\1 \2	]n\3 60*\4+p/p'|dc
+}
+
+echo "N Variant	PicoSat	      Riss"
+join -t\	 <(filter picosat.log) <(filter riss.log)|xargs -n4 printf "%d %-10s %10.2f %10.2f\n"|tr '[A-Z]' '[a-z]'|sed -e':a;p;s/^\(.\).*$/\1/;N;s/\n//;tb;:b;s/^\(.\)\1/\1/;ta;i\' -e' ' -e's/^.//;ba'
