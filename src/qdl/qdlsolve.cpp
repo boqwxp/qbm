@@ -26,6 +26,20 @@
 #include "Root.hpp"
 #include "QdlParser.hpp"
 
+namespace {
+  void usage(std::ostream &out, char const *const  prog) {
+    out << '\n'<< prog <<
+      " [-tTOP[<PAR0,PAR1,...>]] [-DNAME[=VALUE] ...]\n\n"
+      "Parse a configurable circuit description from stdin and compute an implementing\n"
+      "configuration of the included user target function if it exists.\n\n"
+      " TOP\tname of the top-level module defining the circuit, default: top\n"
+      " PARi\tnumeric generic parameters passed to the top-level module, default: none\n"
+      " NAME\tmacro definition with optional VALUE for expansion before parsing\n"
+	<< std::endl;
+  }
+}
+
+
 int main(int const  argc, char const *const  argv[]) {
 
   // Default Instantiation Parameters
@@ -40,6 +54,12 @@ int main(int const  argc, char const *const  argv[]) {
 
     if(arg[0] == '-') {
       char const  opt = arg[1];
+      if((opt == '?') || (opt == 'h')) {
+	usage(std::cout, *argv);
+	return  0;
+      }
+
+      // Options with additional parameters
       if(opt != '\0') {
 	if(arg[2] != '\0')  arg += 2;
 	else {
