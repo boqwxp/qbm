@@ -84,9 +84,9 @@ output bits of an adder for two 2-bit operands.
 
 ### Generate QDIMACS Files for External Solvers
 ```bash
-> bin/qdlsolve -t'adder_xil<6>' -DSELECT=SELECT_COMPLETE -padder_xil5.qdimacs < models/adder_xil.qdl
+> bin/qdlsolve -t'adder_xil<6>' -DSELECT=SELECT_COMPLETE -padder_xil6.qdimacs < models/adder_xil.qdl
 ...
-Dumping problem to file 'adder_xil5.qdimacs'
+Dumping problem to file 'adder_xil6.qdimacs'
 ```
 This generates a [QDIMACS](http://www.qbflib.org/qdimacs.html) representation
 of the mapping problem, for example, for evaluating external solvers.
