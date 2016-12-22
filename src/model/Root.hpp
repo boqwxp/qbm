@@ -66,7 +66,7 @@ public:
   void dumpQDimacs(std::ostream &out) const;
   Result solve();
   bool resolve(int const  v) const {
-    return  std::find(m_clauses.begin(), m_clauses.end(), v) != m_clauses.end();
+    return  std::binary_search(m_clauses.begin(), m_clauses.end(), v);
   }
   void printConfig(std::ostream &out) const;
 };

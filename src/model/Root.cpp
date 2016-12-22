@@ -210,6 +210,7 @@ Result Root::solve() {
       if(v == 0)  break;
       if(v > 0)  m_clauses.push_back(v+1);
     }
+    std::sort(m_clauses.begin(), m_clauses.end());
   }
   return  m_res;
 }
